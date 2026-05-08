@@ -1,0 +1,85 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+datasource db {
+  provider = "postgresql"
+}
+
+generator client {
+  provider     = "prisma-client"
+  output       = "../src/generated/prisma"
+  moduleFormat = "cjs"
+}
+
+model producto {
+  id                  Int               @id @default(autoincrement())
+  nombre              String
+  fecha_creacion      DateTime          @default(now())
+  fecha_actualizacion DateTime          @updatedAt
+  imagenUrl           String?
+  categoria_id        Int?
+  Categorias          categorias?       @relation(fields: [categoria_id], references: [id])
+  producto_regiones   producto_region[]
+}
+
+model categorias {
+  id        Int          @id @default(autoincrement())
+  nombre    String
+  createdAt DateTime     @default(now())
+  parent_id Int?
+  Parent    categorias?  @relation("CategoriaParent", fields: [parent_id], references: [id])
+  Children  categorias[] @relation("CategoriaParent")
+  productos producto[]
+}
+
+enum estado_region {
+  HABILITADO
+  DESHABILITADO
+  PENDIENTE
+  DESHABILITADO_POR_DISPERSION
+  DESHABILITADO_POR_PRECIO
+}
+
+model region {
+  id                Int               @id @default(autoincrement())
+  nombre            String
+  estado            estado_region     @default(PENDIENTE)
+  producto_regiones producto_region[]
+}
+
+model producto_region {
+  producto_id     Int
+  codigo          String            @id @unique
+  precio          Float
+  region_id       Int
+  estado          estado_region     @default(PENDIENTE)
+  producto        producto          @relation(fields: [producto_id], references: [id])
+  region          region            @relation(fields: [region_id], references: [id])
+  oferta_producto oferta_producto[]
+}
+
+model oferta_producto {
+  id        Int             @id @default(autoincrement())
+  oferta_id Int
+  precio    Float
+  region_id String
+  estado    estado_region   @default(PENDIENTE)
+  oferta    oferta          @relation(fields: [oferta_id], references: [id])
+  region    producto_region @relation(fields: [region_id], references: [codigo])
+}
+enum estado_oferta {
+  ACTIVA
+  INACTIVA
+  EXPIRADA
+}
+model oferta {
+  id           Int               @id @default(autoincrement())
+  nombre       String
+  descripcion  String
+  fecha_inicio DateTime
+  fecha_fin    DateTime
+  estado       estado_oferta     @default(ACTIVA)
+  productos    oferta_producto[]
+}
