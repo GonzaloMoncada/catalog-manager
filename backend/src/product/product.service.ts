@@ -1,26 +1,34 @@
 import { Injectable } from '@nestjs/common';
+import { ProductDbService } from './product-db/product-db.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
+import { CreateProductoRegionDto } from './dto/create-producto-region.dto';
 
 @Injectable()
 export class ProductService {
-  create(createProductDto: CreateProductDto) {
-    return 'This action adds a new product';
+  constructor(private readonly productDbService: ProductDbService) {}
+
+  crearProducto(data: CreateProductDto) {
+    return this.productDbService.crearProducto(data);
   }
 
-  findAll() {
-    return `This action returns all product`;
+  obtenerProductos(pagina?: number, limite?: number) {
+    return this.productDbService.obtenerProductos(pagina, limite);
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} product`;
+  obtenerProductoPorId(id: number) {
+    return this.productDbService.obtenerProductoPorId(id);
   }
 
-  update(id: number, updateProductDto: UpdateProductDto) {
-    return `This action updates a #${id} product`;
+  actualizarProducto(id: number, data: UpdateProductDto) {
+    return this.productDbService.actualizarProducto(id, data);
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} product`;
+  eliminarProducto(id: number) {
+    return this.productDbService.eliminarProducto(id);
+  }
+
+  crearProductoRegion(productoId: number, data: CreateProductoRegionDto) {
+    return this.productDbService.crearProductoRegion(productoId, data);
   }
 }
