@@ -16,7 +16,9 @@ import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { PermisosGuard } from 'src/auth/permisos/permisos.guard';
 import { RequirePermissions } from 'src/auth/permisos/permisos.decorator';
 import { Permisos } from 'src/auth/permisos/permisos.enum';
+import { AuditTable } from 'src/registro-actividades/audit.decorator';
 
+@AuditTable('permisos')
 @UseGuards(JwtAuthGuard, PermisosGuard)
 @Controller('permiso')
 export class PermisoController {

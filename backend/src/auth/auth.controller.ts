@@ -5,7 +5,9 @@ import { LocalAuthGuard } from './local-auth.guard';
 import { AuthService } from './auth.service';
 import { JwtAuthGuard } from './jwt-auth.guard';
 import { Public } from './public.decorator';
+import { SkipAudit } from 'src/registro-actividades/audit.decorator';
 
+@SkipAudit()
 @UseGuards(JwtAuthGuard)
 @Controller()
 export class AuthController {

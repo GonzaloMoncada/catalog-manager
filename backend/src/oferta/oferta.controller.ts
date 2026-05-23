@@ -17,7 +17,9 @@ import { PermisosGuard } from 'src/auth/permisos/permisos.guard';
 import { Public } from 'src/auth/public.decorator';
 import { RequirePermissions } from 'src/auth/permisos/permisos.decorator';
 import { Permisos } from 'src/auth/permisos/permisos.enum';
+import { AuditTable } from 'src/registro-actividades/audit.decorator';
 
+@AuditTable('ofertas')
 @UseGuards(JwtAuthGuard, PermisosGuard)
 @Controller('oferta')
 export class OfertaController {

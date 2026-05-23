@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { APP_INTERCEPTOR } from '@nestjs/core';
 import { ConfigModule } from '@nestjs/config';
 import { CacheModule } from '@nestjs/cache-manager';
 import { ProductModule } from './product/product.module';
@@ -11,6 +12,8 @@ import { UsersModule } from './users/users.module';
 import { RolModule } from './rol/rol.module';
 import { PermisoModule } from './permiso/permiso.module';
 import { PermisosModule } from './auth/permisos/permisos.module';
+import { RegistroActividadesModule } from './registro-actividades/registro-actividades.module';
+import { RegistroActividadesInterceptor } from './registro-actividades/registro-actividades.interceptor';
 
 @Module({
   imports: [
@@ -26,6 +29,13 @@ import { PermisosModule } from './auth/permisos/permisos.module';
     UsersModule,
     RolModule,
     PermisoModule,
+    RegistroActividadesModule,
+  ],
+  providers: [
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: RegistroActividadesInterceptor,
+    },
   ],
 })
 export class AppModule {}

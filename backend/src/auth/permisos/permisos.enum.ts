@@ -33,4 +33,7 @@ export enum Permisos {
   PERMISO_READ = 'permiso:read',
   PERMISO_UPDATE = 'permiso:update',
   PERMISO_DELETE = 'permiso:delete',
+
+  REGISTRO_ACTIVIDAD_READ = 'registro_actividad:read',
+  REGISTRO_ACTIVIDAD_DELETE = 'registro_actividad:delete',
 }
