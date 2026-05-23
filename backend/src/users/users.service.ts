@@ -35,7 +35,10 @@ export class UsersService {
   }
 
   async asignarRolAUsuario(usuarioId: number, rolId: number) {
-    const result = await this.usersDbService.asignarRolAUsuario(usuarioId, rolId);
+    const result = await this.usersDbService.asignarRolAUsuario(
+      usuarioId,
+      rolId,
+    );
     await this.cache.del(`user:${usuarioId}:permisos`);
     return result;
   }
@@ -48,5 +51,13 @@ export class UsersService {
     const result = await this.usersDbService.quitarRolDeUsuario(usuarioId, rolId);
     await this.cache.del(`user:${usuarioId}:permisos`);
     return result;
+  }
+
+  habilitar2fa(usuarioId: number, secret: string) {
+    return this.usersDbService.habilitar2fa(usuarioId, secret);
+  }
+
+  deshabilitar2fa(usuarioId: number) {
+    return this.usersDbService.deshabilitar2fa(usuarioId);
   }
 }

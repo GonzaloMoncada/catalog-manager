@@ -21,15 +21,18 @@ export class RegistroActividadesInterceptor implements NestInterceptor {
     const handler = context.getHandler();
     const controller = context.getClass();
 
-    const skip = this.reflector.getAllAndOverride<boolean>(SKIP_AUDIT_KEY, [handler, controller]);
+    const skip = this.reflector.getAllAndOverride<boolean>(SKIP_AUDIT_KEY, [
+      handler,
+      controller,
+    ]);
     if (skip) {
       return next.handle();
     }
 
-    const nombreTabla = this.reflector.getAllAndOverride<string>(AUDIT_TABLE_KEY, [
-      handler,
-      controller,
-    ]);
+    const nombreTabla = this.reflector.getAllAndOverride<string>(
+      AUDIT_TABLE_KEY,
+      [handler, controller],
+    );
     if (!nombreTabla) {
       return next.handle();
     }

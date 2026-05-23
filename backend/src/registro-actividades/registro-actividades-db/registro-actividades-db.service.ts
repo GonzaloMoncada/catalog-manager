@@ -56,17 +56,26 @@ export class RegistroActividadesDbService {
     });
 
     if (!registro) {
-      throw new NotFoundException(`Registro de actividad con id ${id} no encontrado`);
+      throw new NotFoundException(
+        `Registro de actividad con id ${id} no encontrado`,
+      );
     }
 
     return registro;
   }
 
-  async actualizarRegistroActividad(id: number, data: UpdateRegistroActividadDto) {
-    const registro = await this.prisma.registro_actividades.findUnique({ where: { id } });
+  async actualizarRegistroActividad(
+    id: number,
+    data: UpdateRegistroActividadDto,
+  ) {
+    const registro = await this.prisma.registro_actividades.findUnique({
+      where: { id },
+    });
 
     if (!registro) {
-      throw new NotFoundException(`Registro de actividad con id ${id} no encontrado`);
+      throw new NotFoundException(
+        `Registro de actividad con id ${id} no encontrado`,
+      );
     }
 
     return this.prisma.registro_actividades.update({
@@ -77,10 +86,14 @@ export class RegistroActividadesDbService {
   }
 
   async eliminarRegistroActividad(id: number) {
-    const registro = await this.prisma.registro_actividades.findUnique({ where: { id } });
+    const registro = await this.prisma.registro_actividades.findUnique({
+      where: { id },
+    });
 
     if (!registro) {
-      throw new NotFoundException(`Registro de actividad con id ${id} no encontrado`);
+      throw new NotFoundException(
+        `Registro de actividad con id ${id} no encontrado`,
+      );
     }
 
     return this.prisma.registro_actividades.delete({

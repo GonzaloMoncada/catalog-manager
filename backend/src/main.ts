@@ -27,8 +27,12 @@ async function bootstrap() {
     getSessionIdentifier: (req) => req.cookies?.access_token ?? 'anonymous',
     size: 64,
     ignoredMethods: ['GET', 'HEAD', 'OPTIONS'],
-    getCsrfTokenFromRequest: (req) => req.headers['x-csrf-token']?.toString() ?? null,
-    skipCsrfProtection: (req) => req.path === '/auth/login' || req.path === '/auth/logout',
+    getCsrfTokenFromRequest: (req) =>
+      req.headers['x-csrf-token']?.toString() ?? null,
+    skipCsrfProtection: (req) =>
+      req.path === '/auth/login' ||
+      req.path === '/auth/logout' ||
+      req.path === '/auth/verify-2fa',
   });
 
   app.use(doubleCsrfProtection);

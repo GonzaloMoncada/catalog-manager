@@ -1,4 +1,3 @@
-
 import { Strategy } from 'passport-jwt';
 import { PassportStrategy } from '@nestjs/passport';
 import { Injectable, UnauthorizedException } from '@nestjs/common';
@@ -21,6 +20,9 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   async validate(req: Request, payload: any) {
+    if (payload.type) {
+      throw new UnauthorizedException('Token no autorizado');
+    }
     const token = req.cookies?.access_token;
     if (token) {
       const isBlacklisted = await this.cache.get(`jwt:blacklist:${token}`);

@@ -22,12 +22,18 @@ import { SkipAudit } from './audit.decorator';
 @UseGuards(JwtAuthGuard, PermisosGuard)
 @Controller('registro-actividades')
 export class RegistroActividadesController {
-  constructor(private readonly registroActividadesService: RegistroActividadesService) {}
+  constructor(
+    private readonly registroActividadesService: RegistroActividadesService,
+  ) {}
 
   @RequirePermissions(Permisos.REGISTRO_ACTIVIDAD_READ)
   @Post()
-  crearRegistroActividad(@Body() createRegistroActividadDto: CreateRegistroActividadDto) {
-    return this.registroActividadesService.crearRegistroActividad(createRegistroActividadDto);
+  crearRegistroActividad(
+    @Body() createRegistroActividadDto: CreateRegistroActividadDto,
+  ) {
+    return this.registroActividadesService.crearRegistroActividad(
+      createRegistroActividadDto,
+    );
   }
 
   @RequirePermissions(Permisos.REGISTRO_ACTIVIDAD_READ)

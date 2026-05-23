@@ -88,8 +88,9 @@ model usuarios {
   id               BigInt                @id @default(autoincrement())
   nombre_usuario   String                @unique
   correo           String                @unique
-  contrasena       String
-  fecha_creacion   DateTime              @default(now())
+  contrasena         String
+  two_factor_secret  String?
+  fecha_creacion     DateTime              @default(now())
   email_verified   DateTime?
   image_url        String?
   usuarios_roles   usuarios_roles[]

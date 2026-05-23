@@ -19,10 +19,10 @@ export class PermisosGuard implements CanActivate {
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const requiredPermisos = this.reflector.getAllAndOverride<Permisos[]>(PERMISSIONS_KEY, [
-      context.getHandler(),
-      context.getClass(),
-    ]);
+    const requiredPermisos = this.reflector.getAllAndOverride<Permisos[]>(
+      PERMISSIONS_KEY,
+      [context.getHandler(), context.getClass()],
+    );
     if (!requiredPermisos) {
       return true;
     }
@@ -31,7 +31,9 @@ export class PermisosGuard implements CanActivate {
 
     let cached = await this.cache.get<UserPermisosCache>(cacheKey);
     if (!cached) {
-      const rolesDeUsuario = await this.usersService.obtenerRolesDeUsuario(user.userId);
+      const rolesDeUsuario = await this.usersService.obtenerRolesDeUsuario(
+        user.userId,
+      );
       const isAdmin = rolesDeUsuario.some(
         (r) => r.tipo_rol.nombre.toLowerCase() === 'administrador',
       );

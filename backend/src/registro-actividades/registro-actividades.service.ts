@@ -5,14 +5,19 @@ import { UpdateRegistroActividadDto } from './dto/update-registro-actividad.dto'
 
 @Injectable()
 export class RegistroActividadesService {
-  constructor(private readonly registroActividadesDbService: RegistroActividadesDbService) {}
+  constructor(
+    private readonly registroActividadesDbService: RegistroActividadesDbService,
+  ) {}
 
   crearRegistroActividad(data: CreateRegistroActividadDto) {
     return this.registroActividadesDbService.crearRegistroActividad(data);
   }
 
   obtenerRegistrosActividades(pagina?: number, limite?: number) {
-    return this.registroActividadesDbService.obtenerRegistrosActividades(pagina, limite);
+    return this.registroActividadesDbService.obtenerRegistrosActividades(
+      pagina,
+      limite,
+    );
   }
 
   obtenerRegistroActividadPorId(id: number) {
@@ -20,7 +25,10 @@ export class RegistroActividadesService {
   }
 
   actualizarRegistroActividad(id: number, data: UpdateRegistroActividadDto) {
-    return this.registroActividadesDbService.actualizarRegistroActividad(id, data);
+    return this.registroActividadesDbService.actualizarRegistroActividad(
+      id,
+      data,
+    );
   }
 
   eliminarRegistroActividad(id: number) {

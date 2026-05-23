@@ -144,29 +144,29 @@ export class UsersDbService {
   }
 
   async obtenerRolesDeUsuario(usuarioId: number) {
-  const usuario = await this.prisma.usuarios.findUnique({
-    where: { id: usuarioId },
-  });
+    const usuario = await this.prisma.usuarios.findUnique({
+      where: { id: usuarioId },
+    });
 
-  if (!usuario) {
-    throw new NotFoundException(`Usuario con id ${usuarioId} no encontrado`);
-  }
+    if (!usuario) {
+      throw new NotFoundException(`Usuario con id ${usuarioId} no encontrado`);
+    }
 
-  return this.prisma.usuarios_roles.findMany({
-    where: { usuario_id: usuarioId },
-    include: {
-      tipo_rol: {
-        include: {
-          roles_permisos: {
-            include: {
-              permiso: true,
+    return this.prisma.usuarios_roles.findMany({
+      where: { usuario_id: usuarioId },
+      include: {
+        tipo_rol: {
+          include: {
+            roles_permisos: {
+              include: {
+                permiso: true,
+              },
             },
           },
         },
       },
-    },
-  });
-}
+    });
+  }
 
   async quitarRolDeUsuario(usuarioId: number, rolId: number) {
     const relacion = await this.prisma.usuarios_roles.findFirst({
@@ -181,6 +181,20 @@ export class UsersDbService {
 
     return this.prisma.usuarios_roles.delete({
       where: { id: relacion.id },
+    });
+  }
+
+  async habilitar2fa(usuarioId: number, secret: string) {
+    await this.prisma.usuarios.update({
+      where: { id: usuarioId },
+      data: { two_factor_secret: secret },
+    });
+  }
+
+  async deshabilitar2fa(usuarioId: number) {
+    await this.prisma.usuarios.update({
+      where: { id: usuarioId },
+      data: { two_factor_secret: null },
     });
   }
 }
