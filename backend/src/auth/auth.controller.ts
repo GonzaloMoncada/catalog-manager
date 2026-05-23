@@ -87,8 +87,8 @@ export class AuthController {
   }
 
   @Delete('auth/2fa')
-  async disable2fa(@Request() req) {
-    await this.authService.disable2fa(req.user.userId);
+  async disable2fa(@Request() req, @Body('codigo') codigo: string) {
+    await this.authService.disable2fa(req.user.userId, codigo);
     return { ok: true };
   }
 

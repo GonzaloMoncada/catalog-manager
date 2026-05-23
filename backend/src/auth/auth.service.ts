@@ -97,10 +97,17 @@ export class AuthService {
     await this.usersService.habilitar2fa(userId, secret);
   }
 
-  async disable2fa(userId: number): Promise<void> {
+  async disable2fa(userId: number, codigo: string): Promise<void> {
     const user = await this.usersService.obtenerUsuarioPorId(userId);
     if (!user.two_factor_secret) {
       throw new BadRequestException('2FA no está habilitado para este usuario');
+    }
+    const isValid = await this.twoFactorService.verifyToken(
+      user.two_factor_secret,
+      codigo,
+    );
+    if (!isValid) {
+      throw new UnauthorizedException('Código 2FA inválido');
     }
     await this.usersService.deshabilitar2fa(userId);
   }
