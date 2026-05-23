@@ -10,11 +10,13 @@ import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { RolModule } from './rol/rol.module';
 import { PermisoModule } from './permiso/permiso.module';
+import { PermisosModule } from './auth/permisos/permisos.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
     CacheModule.register({ isGlobal: true }),
+    PermisosModule,
     ProductModule,
     PrismaModule,
     CategoryModule,

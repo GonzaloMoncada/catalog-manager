@@ -5,6 +5,11 @@ import { Permisos } from './permisos.enum';
 import { PERMISSIONS_KEY } from './permisos.decorator';
 import { UsersService } from 'src/users/users.service';
 
+interface UserPermisosCache {
+  isAdmin: boolean;
+  permisos: string[];
+}
+
 @Injectable()
 export class PermisosGuard implements CanActivate {
   constructor(
@@ -24,15 +29,23 @@ export class PermisosGuard implements CanActivate {
     const { user } = context.switchToHttp().getRequest();
     const cacheKey = `user:${user.userId}:permisos`;
 
-    let userPermisos = await this.cache.get<string[]>(cacheKey);
-    if (!userPermisos) {
+    let cached = await this.cache.get<UserPermisosCache>(cacheKey);
+    if (!cached) {
       const rolesDeUsuario = await this.usersService.obtenerRolesDeUsuario(user.userId);
-      userPermisos = rolesDeUsuario.flatMap((r) =>
+      const isAdmin = rolesDeUsuario.some(
+        (r) => r.tipo_rol.nombre.toLowerCase() === 'administrador',
+      );
+      const permisos = rolesDeUsuario.flatMap((r) =>
         r.tipo_rol.roles_permisos.map((rp) => rp.permiso.nombre),
       );
-      await this.cache.set(cacheKey, userPermisos, 300_000);
+      cached = { isAdmin, permisos };
+      await this.cache.set(cacheKey, cached, 300_000);
     }
 
-    return requiredPermisos.some((p) => userPermisos!.includes(p));
+    if (cached.isAdmin) {
+      return true;
+    }
+
+    return requiredPermisos.some((p) => cached.permisos.includes(p));
   }
 }

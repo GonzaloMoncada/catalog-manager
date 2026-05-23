@@ -13,13 +13,17 @@ import { OfertaService } from './oferta.service';
 import { CreateOfertaDto } from './dto/create-oferta.dto';
 import { UpdateOfertaDto } from './dto/update-oferta.dto';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
+import { PermisosGuard } from 'src/auth/permisos/permisos.guard';
 import { Public } from 'src/auth/public.decorator';
+import { RequirePermissions } from 'src/auth/permisos/permisos.decorator';
+import { Permisos } from 'src/auth/permisos/permisos.enum';
 
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, PermisosGuard)
 @Controller('oferta')
 export class OfertaController {
   constructor(private readonly ofertaService: OfertaService) {}
 
+  @RequirePermissions(Permisos.OFERTA_CREATE)
   @Post()
   crearOferta(@Body() createOfertaDto: CreateOfertaDto) {
     return this.ofertaService.crearOferta(createOfertaDto);
@@ -43,6 +47,7 @@ export class OfertaController {
     return this.ofertaService.obtenerOfertaPorId(+id);
   }
 
+  @RequirePermissions(Permisos.OFERTA_UPDATE)
   @Patch(':id')
   actualizarOferta(
     @Param('id') id: string,
@@ -51,6 +56,7 @@ export class OfertaController {
     return this.ofertaService.actualizarOferta(+id, updateOfertaDto);
   }
 
+  @RequirePermissions(Permisos.OFERTA_DELETE)
   @Delete(':id')
   eliminarOferta(@Param('id') id: string) {
     return this.ofertaService.eliminarOferta(+id);

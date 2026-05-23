@@ -14,17 +14,22 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { AsignarRolDto } from './dto/asignar-rol.dto';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
+import { PermisosGuard } from 'src/auth/permisos/permisos.guard';
+import { RequirePermissions } from 'src/auth/permisos/permisos.decorator';
+import { Permisos } from 'src/auth/permisos/permisos.enum';
 
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, PermisosGuard)
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
+  @RequirePermissions(Permisos.USUARIO_CREATE)
   @Post()
   crearUsuario(@Body() createUserDto: CreateUserDto) {
     return this.usersService.crearUsuario(createUserDto);
   }
 
+  @RequirePermissions(Permisos.USUARIO_READ)
   @Get()
   obtenerUsuarios(
     @Query('pagina') pagina?: string,
@@ -36,11 +41,13 @@ export class UsersController {
     );
   }
 
+  @RequirePermissions(Permisos.USUARIO_READ)
   @Get(':id')
   obtenerUsuarioPorId(@Param('id') id: string) {
     return this.usersService.obtenerUsuarioPorId(+id);
   }
 
+  @RequirePermissions(Permisos.USUARIO_UPDATE)
   @Patch(':id')
   actualizarUsuario(
     @Param('id') id: string,
@@ -49,21 +56,25 @@ export class UsersController {
     return this.usersService.actualizarUsuario(+id, updateUserDto);
   }
 
+  @RequirePermissions(Permisos.USUARIO_DELETE)
   @Delete(':id')
   eliminarUsuario(@Param('id') id: string) {
     return this.usersService.eliminarUsuario(+id);
   }
 
+  @RequirePermissions(Permisos.USUARIO_UPDATE)
   @Post(':id/rol')
   asignarRolAUsuario(@Param('id') id: string, @Body() body: AsignarRolDto) {
     return this.usersService.asignarRolAUsuario(+id, body.rol_id);
   }
 
+  @RequirePermissions(Permisos.USUARIO_READ)
   @Get(':id/rol')
   obtenerRolesDeUsuario(@Param('id') id: string) {
     return this.usersService.obtenerRolesDeUsuario(+id);
   }
 
+  @RequirePermissions(Permisos.USUARIO_UPDATE)
   @Delete(':id/rol/:rolId')
   quitarRolDeUsuario(@Param('id') id: string, @Param('rolId') rolId: string) {
     return this.usersService.quitarRolDeUsuario(+id, +rolId);

@@ -13,13 +13,17 @@ import { RegionService } from './region.service';
 import { CreateRegionDto } from './dto/create-region.dto';
 import { UpdateRegionDto } from './dto/update-region.dto';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
+import { PermisosGuard } from 'src/auth/permisos/permisos.guard';
 import { Public } from 'src/auth/public.decorator';
+import { RequirePermissions } from 'src/auth/permisos/permisos.decorator';
+import { Permisos } from 'src/auth/permisos/permisos.enum';
 
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, PermisosGuard)
 @Controller('region')
 export class RegionController {
   constructor(private readonly regionService: RegionService) {}
 
+  @RequirePermissions(Permisos.REGION_CREATE)
   @Post()
   crearRegion(@Body() createRegionDto: CreateRegionDto) {
     return this.regionService.crearRegion(createRegionDto);
@@ -57,6 +61,7 @@ export class RegionController {
     );
   }
 
+  @RequirePermissions(Permisos.REGION_UPDATE)
   @Patch(':id')
   actualizarRegion(
     @Param('id') id: string,
@@ -65,6 +70,7 @@ export class RegionController {
     return this.regionService.actualizarRegion(+id, updateRegionDto);
   }
 
+  @RequirePermissions(Permisos.REGION_DELETE)
   @Delete(':id')
   eliminarRegion(@Param('id') id: string) {
     return this.regionService.eliminarRegion(+id);
