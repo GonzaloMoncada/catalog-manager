@@ -60,7 +60,9 @@ export class CategoryDbService {
   }
 
   async actualizarCategoria(id: number, data: UpdateCategoryDto) {
-    const categoria = await this.prisma.categorias.findUnique({ where: { id } });
+    const categoria = await this.prisma.categorias.findUnique({
+      where: { id },
+    });
 
     if (!categoria) {
       throw new NotFoundException(`Categoria con id ${id} no encontrada`);
@@ -81,7 +83,9 @@ export class CategoryDbService {
   }
 
   async eliminarCategoria(id: number) {
-    const categoria = await this.prisma.categorias.findUnique({ where: { id } });
+    const categoria = await this.prisma.categorias.findUnique({
+      where: { id },
+    });
 
     if (!categoria) {
       throw new NotFoundException(`Categoria con id ${id} no encontrada`);

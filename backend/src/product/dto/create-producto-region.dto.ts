@@ -1,4 +1,10 @@
-import { IsString, IsNumber, IsOptional, IsNotEmpty, IsEnum } from 'class-validator';
+import {
+  IsString,
+  IsNumber,
+  IsOptional,
+  IsNotEmpty,
+  IsEnum,
+} from 'class-validator';
 import { estado_region } from '../../generated/prisma/enums';
 
 export class CreateProductoRegionDto {

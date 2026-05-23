@@ -99,21 +99,25 @@ export class ProductDbService {
   }
 
   async crearProductoRegion(productoId: number, data: CreateProductoRegionDto) {
-  // 1. Validar que el producto existe
-  const producto = await this.prisma.producto.findUnique({ where: { id: productoId } });
-  if (!producto) {
-    throw new NotFoundException(`Producto con id ${productoId} no encontrado`);
+    // 1. Validar que el producto existe
+    const producto = await this.prisma.producto.findUnique({
+      where: { id: productoId },
+    });
+    if (!producto) {
+      throw new NotFoundException(
+        `Producto con id ${productoId} no encontrado`,
+      );
+    }
+    // 2. Crear solo la relación producto_region
+    const { producto_id, ...datosRegion } = data;
+    return this.prisma.producto_region.create({
+      data: {
+        ...datosRegion,
+        producto_id: productoId,
+      },
+      include: {
+        region: true,
+      },
+    });
   }
-  // 2. Crear solo la relación producto_region
-  const { producto_id, ...datosRegion } = data;
-  return this.prisma.producto_region.create({
-    data: {
-      ...datosRegion,
-      producto_id: productoId,
-    },
-    include: {
-      region: true,
-    },
-  });
-}
 }

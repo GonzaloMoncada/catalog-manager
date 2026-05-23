@@ -1,4 +1,12 @@
-import { IsString, IsNumber, IsOptional, IsNotEmpty, IsUrl, IsArray, ValidateNested } from 'class-validator';
+import {
+  IsString,
+  IsNumber,
+  IsOptional,
+  IsNotEmpty,
+  IsUrl,
+  IsArray,
+  ValidateNested,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 import { OmitType } from '@nestjs/mapped-types';
 import { CreateProductoRegionDto } from './create-producto-region.dto';
@@ -26,4 +34,3 @@ export class CreateProductDto {
   @Type(() => CreateProductRegionDto)
   regiones?: CreateProductRegionDto[];
 }
-

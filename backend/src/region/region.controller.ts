@@ -1,8 +1,21 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { RegionService } from './region.service';
 import { CreateRegionDto } from './dto/create-region.dto';
 import { UpdateRegionDto } from './dto/update-region.dto';
+import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
+import { Public } from 'src/auth/public.decorator';
 
+@UseGuards(JwtAuthGuard)
 @Controller('region')
 export class RegionController {
   constructor(private readonly regionService: RegionService) {}
@@ -12,6 +25,7 @@ export class RegionController {
     return this.regionService.crearRegion(createRegionDto);
   }
 
+  @Public()
   @Get()
   obtenerRegiones(
     @Query('pagina') pagina?: string,
@@ -23,11 +37,13 @@ export class RegionController {
     );
   }
 
+  @Public()
   @Get(':id')
   obtenerRegionPorId(@Param('id') id: string) {
     return this.regionService.obtenerRegionPorId(+id);
   }
 
+  @Public()
   @Get(':id/productos')
   obtenerProductosPorRegion(
     @Param('id') id: string,

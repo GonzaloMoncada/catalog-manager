@@ -51,7 +51,9 @@ export class RegionDbService {
   }
 
   async obtenerProductosPorRegion(regionId: number, pagina = 1, limite = 10) {
-    const region = await this.prisma.region.findUnique({ where: { id: regionId } });
+    const region = await this.prisma.region.findUnique({
+      where: { id: regionId },
+    });
 
     if (!region) {
       throw new NotFoundException(`Region con id ${regionId} no encontrada`);

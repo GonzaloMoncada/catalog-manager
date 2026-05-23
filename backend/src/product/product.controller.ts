@@ -1,9 +1,22 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { ProductService } from './product.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { CreateProductoRegionDto } from './dto/create-producto-region.dto';
+import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
+import { Public } from 'src/auth/public.decorator';
 
+@UseGuards(JwtAuthGuard)
 @Controller('product')
 export class ProductController {
   constructor(private readonly productService: ProductService) {}
@@ -13,6 +26,7 @@ export class ProductController {
     return this.productService.crearProducto(createProductDto);
   }
 
+  @Public()
   @Get()
   obtenerProductos(
     @Query('pagina') pagina?: string,
@@ -24,6 +38,7 @@ export class ProductController {
     );
   }
 
+  @Public()
   @Get(':id')
   obtenerProductoPorId(@Param('id') id: string) {
     return this.productService.obtenerProductoPorId(+id);
@@ -47,6 +62,9 @@ export class ProductController {
     @Param('id') id: string,
     @Body() createProductoRegionDto: CreateProductoRegionDto,
   ) {
-    return this.productService.crearProductoRegion(+id, createProductoRegionDto);
+    return this.productService.crearProductoRegion(
+      +id,
+      createProductoRegionDto,
+    );
   }
 }

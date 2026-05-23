@@ -1,8 +1,21 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { OfertaService } from './oferta.service';
 import { CreateOfertaDto } from './dto/create-oferta.dto';
 import { UpdateOfertaDto } from './dto/update-oferta.dto';
+import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
+import { Public } from 'src/auth/public.decorator';
 
+@UseGuards(JwtAuthGuard)
 @Controller('oferta')
 export class OfertaController {
   constructor(private readonly ofertaService: OfertaService) {}
@@ -12,6 +25,7 @@ export class OfertaController {
     return this.ofertaService.crearOferta(createOfertaDto);
   }
 
+  @Public()
   @Get()
   obtenerOfertas(
     @Query('pagina') pagina?: string,
@@ -23,6 +37,7 @@ export class OfertaController {
     );
   }
 
+  @Public()
   @Get(':id')
   obtenerOfertaPorId(@Param('id') id: string) {
     return this.ofertaService.obtenerOfertaPorId(+id);

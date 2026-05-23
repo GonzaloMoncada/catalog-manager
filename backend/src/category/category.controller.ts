@@ -1,8 +1,21 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { CategoryService } from './category.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
+import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
+import { Public } from 'src/auth/public.decorator';
 
+@UseGuards(JwtAuthGuard)
 @Controller('category')
 export class CategoryController {
   constructor(private readonly categoryService: CategoryService) {}
@@ -12,6 +25,7 @@ export class CategoryController {
     return this.categoryService.crearCategoria(createCategoryDto);
   }
 
+  @Public()
   @Get()
   obtenerCategorias(
     @Query('pagina') pagina?: string,
@@ -23,6 +37,7 @@ export class CategoryController {
     );
   }
 
+  @Public()
   @Get(':id')
   obtenerCategoriaPorId(@Param('id') id: string) {
     return this.categoryService.obtenerCategoriaPorId(+id);

@@ -83,3 +83,59 @@ model oferta {
   estado       estado_oferta     @default(ACTIVA)
   productos    oferta_producto[]
 }
+
+model usuarios {
+  id               BigInt                @id @default(autoincrement())
+  nombre_usuario   String                @unique
+  correo           String                @unique
+  contrasena       String
+  fecha_creacion   DateTime              @default(now())
+  email_verified   DateTime?
+  image_url        String?
+  usuarios_roles   usuarios_roles[]
+  registro_actividades registro_actividades[]
+}
+
+model tipos_roles {
+  id               BigInt                @id @default(autoincrement())
+  nombre           String                @unique
+  usuarios_roles   usuarios_roles[]
+  roles_permisos   roles_permisos[]
+}
+
+model permisos {
+  id               BigInt                @id @default(autoincrement())
+  nombre           String                @unique
+  roles_permisos   roles_permisos[]
+}
+
+model roles_permisos {
+  id               BigInt                @id @default(autoincrement())
+  rol_id           BigInt
+  permiso_id       BigInt
+  tipo_rol         tipos_roles           @relation(fields: [rol_id], references: [id], onDelete: Cascade)
+  permiso          permisos              @relation(fields: [permiso_id], references: [id], onDelete: Cascade)
+
+  @@unique([rol_id, permiso_id])
+}
+
+model usuarios_roles {
+  id               BigInt                @id @default(autoincrement())
+  usuario_id       BigInt
+  rol_id           BigInt
+  usuario          usuarios              @relation(fields: [usuario_id], references: [id], onDelete: Cascade)
+  tipo_rol         tipos_roles           @relation(fields: [rol_id], references: [id], onDelete: Cascade)
+
+  @@unique([usuario_id, rol_id])
+}
+
+model registro_actividades {
+  id               BigInt                @id @default(autoincrement())
+  usuario_id       BigInt?
+  accion           String
+  nombre_tabla     String
+  id_registro      BigInt?
+  marca_tiempo     DateTime              @default(now())
+  detalles         String?
+  usuario          usuarios?             @relation(fields: [usuario_id], references: [id], onDelete: SetNull)
+}

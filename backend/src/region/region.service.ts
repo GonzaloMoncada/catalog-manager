@@ -19,8 +19,16 @@ export class RegionService {
     return this.regionDbService.obtenerRegionPorId(id);
   }
 
-  obtenerProductosPorRegion(regionId: number, pagina?: number, limite?: number) {
-    return this.regionDbService.obtenerProductosPorRegion(regionId, pagina, limite);
+  obtenerProductosPorRegion(
+    regionId: number,
+    pagina?: number,
+    limite?: number,
+  ) {
+    return this.regionDbService.obtenerProductosPorRegion(
+      regionId,
+      pagina,
+      limite,
+    );
   }
 
   actualizarRegion(id: number, data: UpdateRegionDto) {
