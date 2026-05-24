@@ -15,6 +15,7 @@ generator client {
 
 model producto {
   id                  Int               @id @default(autoincrement())
+  codigo              String            @default("")
   nombre              String
   fecha_creacion      DateTime          @default(now())
   fecha_actualizacion DateTime          @updatedAt
@@ -93,6 +94,7 @@ model usuarios {
   fecha_creacion     DateTime              @default(now())
   email_verified   DateTime?
   image_url        String?
+  estado           String                @default("pendiente")
   usuarios_roles   usuarios_roles[]
   registro_actividades registro_actividades[]
 }
@@ -107,6 +109,7 @@ model tipos_roles {
 model permisos {
   id               BigInt                @id @default(autoincrement())
   nombre           String                @unique
+  descripcion      String?
   roles_permisos   roles_permisos[]
 }
 

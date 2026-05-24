@@ -3,6 +3,7 @@ import { Cache } from '@nestjs/cache-manager';
 import { UsersDbService } from './users-db/users-db.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { CambiarContrasenaDto } from './dto/cambiar-contrasena.dto';
 
 @Injectable()
 export class UsersService {
@@ -26,8 +27,12 @@ export class UsersService {
     return this.usersDbService.obtenerUsuarioPorCorreo(correo);
   }
 
-  actualizarUsuario(id: number, data: UpdateUserDto) {
-    return this.usersDbService.actualizarUsuario(id, data);
+  async actualizarUsuario(id: number, data: UpdateUserDto) {
+    const result = await this.usersDbService.actualizarUsuario(id, data);
+    if (data.estado !== undefined) {
+      await this.cache.del(`user:${id}:estado`);
+    }
+    return result;
   }
 
   eliminarUsuario(id: number) {
@@ -59,5 +64,33 @@ export class UsersService {
 
   deshabilitar2fa(usuarioId: number) {
     return this.usersDbService.deshabilitar2fa(usuarioId);
+  }
+
+  async verificarPermiso(
+    usuarioId: number,
+    permiso: string,
+  ): Promise<boolean> {
+    const roles = await this.usersDbService.obtenerRolesDeUsuario(usuarioId);
+    const isAdmin = roles.some(
+      (r) => r.tipo_rol.nombre.toLowerCase() === 'administrador',
+    );
+    if (isAdmin) return true;
+    return roles.some((r) =>
+      r.tipo_rol.roles_permisos.some((rp) => rp.permiso.nombre === permiso),
+    );
+  }
+
+  async confirmarCuenta(usuarioId: number) {
+    const result = await this.usersDbService.confirmarCuenta(usuarioId);
+    await this.cache.del(`user:${usuarioId}:estado`);
+    return result;
+  }
+
+  cambiarContrasenaPropia(usuarioId: number, dto: CambiarContrasenaDto) {
+    return this.usersDbService.cambiarContrasena(
+      usuarioId,
+      dto.contrasena_actual,
+      dto.contrasena_nueva,
+    );
   }
 }

@@ -7,12 +7,14 @@ import {
   Param,
   Delete,
   Query,
+  Req,
   UseGuards,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { AsignarRolDto } from './dto/asignar-rol.dto';
+import { CambiarContrasenaDto } from './dto/cambiar-contrasena.dto';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { PermisosGuard } from 'src/auth/permisos/permisos.guard';
 import { RequirePermissions } from 'src/auth/permisos/permisos.decorator';
@@ -41,6 +43,19 @@ export class UsersController {
       pagina ? +pagina : undefined,
       limite ? +limite : undefined,
     );
+  }
+
+  @Post('confirmar')
+  confirmarCuenta(@Req() req: any) {
+    return this.usersService.confirmarCuenta(req.user.userId);
+  }
+
+  @Post('cambiar-contrasena')
+  cambiarContrasena(
+    @Req() req: any,
+    @Body() dto: CambiarContrasenaDto,
+  ) {
+    return this.usersService.cambiarContrasenaPropia(req.user.userId, dto);
   }
 
   @RequirePermissions(Permisos.USUARIO_READ)

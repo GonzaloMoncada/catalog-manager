@@ -22,6 +22,9 @@ export class AuthService {
   async validateUser(mail: string, contrasena: string): Promise<any> {
     const user = await this.usersService.obtenerUsuarioPorCorreo(mail);
     if (user) {
+      if (user.estado === 'deshabilitado') {
+        throw new UnauthorizedException('Cuenta deshabilitada');
+      }
       const passwordMatch = await bcrypt.compare(contrasena, user.contrasena);
       if (passwordMatch) {
         const { contrasena, ...result } = user;

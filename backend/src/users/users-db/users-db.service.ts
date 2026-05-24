@@ -2,6 +2,7 @@ import {
   Injectable,
   NotFoundException,
   ConflictException,
+  BadRequestException,
 } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateUserDto } from '../dto/create-user.dto';
@@ -195,6 +196,52 @@ export class UsersDbService {
     await this.prisma.usuarios.update({
       where: { id: usuarioId },
       data: { two_factor_secret: null },
+    });
+  }
+
+  async confirmarCuenta(usuarioId: number) {
+    const usuario = await this.prisma.usuarios.findUnique({
+      where: { id: usuarioId },
+    });
+    if (!usuario) {
+      throw new NotFoundException(`Usuario con id ${usuarioId} no encontrado`);
+    }
+    if (usuario.estado !== 'pendiente') {
+      throw new BadRequestException('La cuenta ya fue confirmada previamente');
+    }
+    await this.prisma.usuarios.update({
+      where: { id: usuarioId },
+      data: { estado: 'confirmado' },
+    });
+  }
+
+  async cambiarContrasena(
+    usuarioId: number,
+    contrasenaActual: string,
+    contrasenaNueva: string,
+  ) {
+    const usuario = await this.prisma.usuarios.findUnique({
+      where: { id: usuarioId },
+    });
+    if (!usuario) {
+      throw new NotFoundException(`Usuario con id ${usuarioId} no encontrado`);
+    }
+    if (usuario.estado !== 'pendiente') {
+      throw new BadRequestException(
+        'Solo puedes cambiar la contraseña si tu cuenta está en estado pendiente',
+      );
+    }
+    const coincide = await bcrypt.compare(
+      contrasenaActual,
+      usuario.contrasena,
+    );
+    if (!coincide) {
+      throw new BadRequestException('La contraseña actual no es correcta');
+    }
+    const hash = await bcrypt.hash(contrasenaNueva, 10);
+    await this.prisma.usuarios.update({
+      where: { id: usuarioId },
+      data: { contrasena: hash },
     });
   }
 }

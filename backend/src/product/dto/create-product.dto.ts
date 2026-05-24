@@ -18,6 +18,10 @@ export class CreateProductRegionDto extends OmitType(CreateProductoRegionDto, [
 export class CreateProductDto {
   @IsString()
   @IsNotEmpty()
+  codigo!: string;
+
+  @IsString()
+  @IsNotEmpty()
   nombre!: string;
 
   @IsOptional()
