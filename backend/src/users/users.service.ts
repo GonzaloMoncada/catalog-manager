@@ -53,7 +53,10 @@ export class UsersService {
   }
 
   async quitarRolDeUsuario(usuarioId: number, rolId: number) {
-    const result = await this.usersDbService.quitarRolDeUsuario(usuarioId, rolId);
+    const result = await this.usersDbService.quitarRolDeUsuario(
+      usuarioId,
+      rolId,
+    );
     await this.cache.del(`user:${usuarioId}:permisos`);
     return result;
   }
@@ -66,10 +69,7 @@ export class UsersService {
     return this.usersDbService.deshabilitar2fa(usuarioId);
   }
 
-  async verificarPermiso(
-    usuarioId: number,
-    permiso: string,
-  ): Promise<boolean> {
+  async verificarPermiso(usuarioId: number, permiso: string): Promise<boolean> {
     const roles = await this.usersDbService.obtenerRolesDeUsuario(usuarioId);
     const isAdmin = roles.some(
       (r) => r.tipo_rol.nombre.toLowerCase() === 'administrador',

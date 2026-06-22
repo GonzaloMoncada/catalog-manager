@@ -9,6 +9,7 @@ import {
   Delete,
 } from '@nestjs/common';
 import type { Response } from 'express';
+import { Cache } from '@nestjs/cache-manager';
 import { LocalAuthGuard } from './local-auth.guard';
 import { AuthService } from './auth.service';
 import { JwtAuthGuard } from './jwt-auth.guard';
@@ -16,12 +17,17 @@ import { Public } from './public.decorator';
 import { SkipAudit } from 'src/registro-actividades/audit.decorator';
 import { Verify2faDto } from './dto/verify-2fa.dto';
 import { Enable2faDto } from './dto/enable-2fa.dto';
+import { UsersService } from 'src/users/users.service';
 
 @SkipAudit()
 @UseGuards(JwtAuthGuard)
 @Controller()
 export class AuthController {
-  constructor(private authService: AuthService) {}
+  constructor(
+    private authService: AuthService,
+    private usersService: UsersService,
+    private cache: Cache,
+  ) {}
 
   @Public()
   @UseGuards(LocalAuthGuard)
@@ -63,8 +69,29 @@ export class AuthController {
   }
 
   @Get('profile')
-  getProfile(@Request() req) {
-    return req.user;
+  async getProfile(@Request() req) {
+    const { userId, correo } = req.user as { userId: number; correo: string };
+    const cacheKey = `user:${userId}:permisos`;
+    let cached = await this.cache.get<{ isAdmin: boolean; permisos: string[] }>(
+      cacheKey,
+    );
+    if (!cached) {
+      const roles = await this.usersService.obtenerRolesDeUsuario(userId);
+      const isAdmin = roles.some(
+        (r) => r.tipo_rol.nombre.toLowerCase() === 'administrador',
+      );
+      const permisos = roles.flatMap((r) =>
+        r.tipo_rol.roles_permisos.map((rp) => rp.permiso.nombre),
+      );
+      cached = { isAdmin, permisos };
+      await this.cache.set(cacheKey, cached, 300_000);
+    }
+    return {
+      userId,
+      correo,
+      isAdmin: cached.isAdmin,
+      permisos: cached.permisos,
+    };
   }
   @Post('auth/logout')
   async logout(@Request() req, @Res({ passthrough: true }) res: Response) {
@@ -94,8 +121,8 @@ export class AuthController {
 
   @Public()
   @Get('csrf-token')
-  getCsrfToken(@Request() req, @Res({ passthrough: true }) res: Response) {
-    req.csrfToken();
-    return { ok: true };
+  getCsrfToken(@Request() req) {
+    const token = req.csrfToken();
+    return { ok: true, token };
   }
 }

@@ -16,7 +16,7 @@ export class TwoFactorService {
     const result = await this.totp.verify(token, {
       secret,
       epochTolerance: 1,
-    } as any);
+    });
     return result.valid;
   }
 

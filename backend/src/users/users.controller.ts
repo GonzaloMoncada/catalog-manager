@@ -51,10 +51,7 @@ export class UsersController {
   }
 
   @Post('cambiar-contrasena')
-  cambiarContrasena(
-    @Req() req: any,
-    @Body() dto: CambiarContrasenaDto,
-  ) {
+  cambiarContrasena(@Req() req: any, @Body() dto: CambiarContrasenaDto) {
     return this.usersService.cambiarContrasenaPropia(req.user.userId, dto);
   }
 

@@ -36,17 +36,51 @@ export class OfertaController {
   obtenerOfertas(
     @Query('pagina') pagina?: string,
     @Query('limite') limite?: string,
+    @Query('buscar') buscar?: string,
+    @Query('estado') estado?: string,
+    @Query('orderBy') orderBy?: string,
+    @Query('orderDir') orderDir?: string,
+  ) {
+    return this.ofertaService.obtenerOfertasActivas(
+      pagina ? +pagina : undefined,
+      limite ? +limite : undefined,
+      buscar,
+      estado,
+      orderBy,
+      orderDir as 'asc' | 'desc' | undefined,
+    );
+  }
+
+  @RequirePermissions(Permisos.OFERTA_READ)
+  @Get('todas')
+  obtenerTodasLasOfertas(
+    @Query('pagina') pagina?: string,
+    @Query('limite') limite?: string,
+    @Query('buscar') buscar?: string,
+    @Query('estado') estado?: string,
+    @Query('orderBy') orderBy?: string,
+    @Query('orderDir') orderDir?: string,
   ) {
     return this.ofertaService.obtenerOfertas(
       pagina ? +pagina : undefined,
       limite ? +limite : undefined,
+      buscar,
+      estado,
+      orderBy,
+      orderDir as 'asc' | 'desc' | undefined,
     );
+  }
+
+  @RequirePermissions(Permisos.OFERTA_READ)
+  @Get('todas/:id')
+  obtenerOfertaPorIdAdmin(@Param('id') id: string) {
+    return this.ofertaService.obtenerOfertaPorId(+id);
   }
 
   @Public()
   @Get(':id')
   obtenerOfertaPorId(@Param('id') id: string) {
-    return this.ofertaService.obtenerOfertaPorId(+id);
+    return this.ofertaService.obtenerOfertaActivaPorId(+id);
   }
 
   @RequirePermissions(Permisos.OFERTA_UPDATE)

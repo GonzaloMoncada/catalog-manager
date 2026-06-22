@@ -3,6 +3,7 @@ import { ProductDbService } from './product-db/product-db.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { CreateProductoRegionDto } from './dto/create-producto-region.dto';
+import { UpdateProductoRegionDto } from './dto/update-producto-region.dto';
 
 @Injectable()
 export class ProductService {
@@ -12,8 +13,24 @@ export class ProductService {
     return this.productDbService.crearProducto(data);
   }
 
-  obtenerProductos(pagina?: number, limite?: number) {
-    return this.productDbService.obtenerProductos(pagina, limite);
+  obtenerProductos(
+    pagina?: number,
+    limite?: number,
+    buscar?: string,
+    orderBy?: string,
+    orderDir?: 'asc' | 'desc',
+    estado?: string,
+    categoria_id?: number,
+  ) {
+    return this.productDbService.obtenerProductos(
+      pagina,
+      limite,
+      buscar,
+      orderBy,
+      orderDir,
+      estado,
+      categoria_id,
+    );
   }
 
   obtenerProductoPorId(id: number) {
@@ -30,5 +47,55 @@ export class ProductService {
 
   crearProductoRegion(productoId: number, data: CreateProductoRegionDto) {
     return this.productDbService.crearProductoRegion(productoId, data);
+  }
+
+  obtenerTodasLasRegiones(
+    pagina?: number,
+    limite?: number,
+    buscar?: string,
+    orderBy?: string,
+    orderDir?: 'asc' | 'desc',
+    estado?: string,
+    region_id?: number,
+    precio_min?: number,
+    precio_max?: number,
+  ) {
+    return this.productDbService.obtenerTodasLasRegiones(
+      pagina,
+      limite,
+      buscar,
+      orderBy,
+      orderDir,
+      estado,
+      region_id,
+      precio_min,
+      precio_max,
+    );
+  }
+
+  obtenerRegionesDeProducto(
+    productoId: number,
+    pagina?: number,
+    limite?: number,
+    buscar?: string,
+    orderBy?: string,
+    orderDir?: 'asc' | 'desc',
+  ) {
+    return this.productDbService.obtenerRegionesDeProducto(
+      productoId,
+      pagina,
+      limite,
+      buscar,
+      orderBy,
+      orderDir,
+    );
+  }
+
+  actualizarProductoRegion(codigo: string, data: UpdateProductoRegionDto) {
+    return this.productDbService.actualizarProductoRegion(codigo, data);
+  }
+
+  eliminarProductoRegion(codigo: string) {
+    return this.productDbService.eliminarProductoRegion(codigo);
   }
 }

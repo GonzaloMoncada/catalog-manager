@@ -13,10 +13,15 @@ export class RegistroActividadesService {
     return this.registroActividadesDbService.crearRegistroActividad(data);
   }
 
-  obtenerRegistrosActividades(pagina?: number, limite?: number) {
+  obtenerRegistrosActividades(
+    pagina?: number,
+    limite?: number,
+    usuarioId?: number,
+  ) {
     return this.registroActividadesDbService.obtenerRegistrosActividades(
       pagina,
       limite,
+      usuarioId,
     );
   }
 

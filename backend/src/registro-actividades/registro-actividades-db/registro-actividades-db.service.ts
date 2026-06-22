@@ -27,17 +27,23 @@ export class RegistroActividadesDbService {
     });
   }
 
-  async obtenerRegistrosActividades(pagina = 1, limite = 10) {
+  async obtenerRegistrosActividades(
+    pagina = 1,
+    limite = 10,
+    usuarioId?: number,
+  ) {
     const saltar = (pagina - 1) * limite;
+    const where = usuarioId ? { usuario_id: usuarioId } : {};
 
     const [datos, total] = await Promise.all([
       this.prisma.registro_actividades.findMany({
+        where,
         skip: saltar,
         take: limite,
         include: RELACIONES_REGISTRO_ACTIVIDAD,
         orderBy: { marca_tiempo: 'desc' },
       }),
-      this.prisma.registro_actividades.count(),
+      this.prisma.registro_actividades.count({ where }),
     ]);
 
     return {

@@ -11,12 +11,48 @@ export class OfertaService {
     return this.ofertaDbService.crearOferta(data);
   }
 
-  obtenerOfertas(pagina?: number, limite?: number) {
-    return this.ofertaDbService.obtenerOfertas(pagina, limite);
+  obtenerOfertas(
+    pagina?: number,
+    limite?: number,
+    buscar?: string,
+    estado?: string,
+    orderBy?: string,
+    orderDir?: 'asc' | 'desc',
+  ) {
+    return this.ofertaDbService.obtenerOfertas(
+      pagina,
+      limite,
+      buscar,
+      estado,
+      orderBy,
+      orderDir,
+    );
+  }
+
+  obtenerOfertasActivas(
+    pagina?: number,
+    limite?: number,
+    buscar?: string,
+    estado?: string,
+    orderBy?: string,
+    orderDir?: 'asc' | 'desc',
+  ) {
+    return this.ofertaDbService.obtenerOfertasActivas(
+      pagina,
+      limite,
+      buscar,
+      estado,
+      orderBy,
+      orderDir,
+    );
   }
 
   obtenerOfertaPorId(id: number) {
     return this.ofertaDbService.obtenerOfertaPorId(id);
+  }
+
+  obtenerOfertaActivaPorId(id: number) {
+    return this.ofertaDbService.obtenerOfertaActivaPorId(id);
   }
 
   actualizarOferta(id: number, data: UpdateOfertaDto) {

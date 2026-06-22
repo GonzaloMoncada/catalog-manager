@@ -17,6 +17,7 @@ model producto {
   id                  Int               @id @default(autoincrement())
   codigo              String            @default("")
   nombre              String
+  estado              estado_region     @default(PENDIENTE)
   fecha_creacion      DateTime          @default(now())
   fecha_actualizacion DateTime          @updatedAt
   imagenUrl           String?
@@ -65,7 +66,7 @@ model oferta_producto {
   id        Int             @id @default(autoincrement())
   oferta_id Int
   precio    Float
-  region_id String
+    region_id String
   estado    estado_region   @default(PENDIENTE)
   oferta    oferta          @relation(fields: [oferta_id], references: [id])
   region    producto_region @relation(fields: [region_id], references: [codigo])

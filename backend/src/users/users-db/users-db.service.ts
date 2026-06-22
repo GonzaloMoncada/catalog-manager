@@ -72,7 +72,9 @@ export class UsersDbService {
     });
 
     if (!usuario) {
-      throw new NotFoundException(`Usuario con correo ${correo} no encontrado`);
+      throw new NotFoundException(
+        `El correo electrónico que ingresaste no está conectado a una cuenta.`,
+      );
     }
 
     return usuario;
@@ -231,10 +233,7 @@ export class UsersDbService {
         'Solo puedes cambiar la contraseña si tu cuenta está en estado pendiente',
       );
     }
-    const coincide = await bcrypt.compare(
-      contrasenaActual,
-      usuario.contrasena,
-    );
+    const coincide = await bcrypt.compare(contrasenaActual, usuario.contrasena);
     if (!coincide) {
       throw new BadRequestException('La contraseña actual no es correcta');
     }

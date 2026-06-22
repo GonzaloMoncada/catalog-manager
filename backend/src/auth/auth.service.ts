@@ -30,6 +30,9 @@ export class AuthService {
         const { contrasena, ...result } = user;
         return result;
       }
+      throw new UnauthorizedException(
+        'La contraseña que ingresaste es incorrecta.',
+      );
     }
     return null;
   }

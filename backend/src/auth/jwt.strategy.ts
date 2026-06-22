@@ -35,9 +35,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     const cacheKey = `user:${payload.sub}:estado`;
     let estado = await this.cache.get<string>(cacheKey);
     if (!estado) {
-      const usuario = await this.usersService.obtenerUsuarioPorId(
-        payload.sub,
-      );
+      const usuario = await this.usersService.obtenerUsuarioPorId(payload.sub);
       estado = usuario.estado;
       await this.cache.set(cacheKey, estado, 300_000);
     }

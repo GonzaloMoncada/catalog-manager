@@ -1,4 +1,5 @@
 import {
+  ForbiddenException,
   Injectable,
   NotFoundException,
   ConflictException,
@@ -67,6 +68,12 @@ export class RolDbService {
       throw new NotFoundException(`Rol con id ${id} no encontrado`);
     }
 
+    if (rol.nombre === 'Administrador') {
+      throw new ForbiddenException(
+        'El rol Administrador no puede ser modificado',
+      );
+    }
+
     return this.prisma.tipos_roles.update({
       where: { id },
       data,
@@ -79,6 +86,12 @@ export class RolDbService {
 
     if (!rol) {
       throw new NotFoundException(`Rol con id ${id} no encontrado`);
+    }
+
+    if (rol.nombre === 'Administrador') {
+      throw new ForbiddenException(
+        'El rol Administrador no puede ser eliminado',
+      );
     }
 
     return this.prisma.tipos_roles.delete({

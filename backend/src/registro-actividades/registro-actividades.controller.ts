@@ -41,10 +41,12 @@ export class RegistroActividadesController {
   obtenerRegistrosActividades(
     @Query('pagina') pagina?: string,
     @Query('limite') limite?: string,
+    @Query('usuario_id') usuarioId?: string,
   ) {
     return this.registroActividadesService.obtenerRegistrosActividades(
       pagina ? +pagina : undefined,
       limite ? +limite : undefined,
+      usuarioId ? +usuarioId : undefined,
     );
   }
 
