@@ -625,8 +625,8 @@ export default function ProductosPage() {
   }, [globalRegionPage, globalRegionSearch, globalRegionSortBy, globalRegionSortDir, globalFilterEstados, globalRegionPerPage, globalFilterRegion, globalFilterPrecioMin, globalFilterPrecioMax, globalRegionCachePage]);
 
   useEffect(() => {
-    if (regionesOpen) loadGlobalRegiones();
-  }, [loadGlobalRegiones, regionesOpen]);
+    loadGlobalRegiones();
+  }, [loadGlobalRegiones]);
 
   const displayedGlobalRegions = (() => {
     if (globalRegionPerPage > 500) return globalRegionList;
@@ -671,34 +671,26 @@ export default function ProductosPage() {
 
   function openRegiones() {
     setRegionesOpen(true);
-    setGlobalRegionPage(1);
-    setGlobalRegionSearch("");
-    setGlobalRegionSortBy("estado");
-    setGlobalRegionSortDir("asc");
-    setGlobalFilterEstados(new Set());
-    setGlobalFilterRegion("");
-    setGlobalFilterPrecioMin("");
-    setGlobalFilterPrecioMax("");
-    setGlobalSelectedRegions(new Set());
-    setGlobalBulkEstado("");
-    setGlobalBulkLoading(false);
-    setGlobalRegionCachePage(0);
-    setGlobalRegionListCache({});
-    globalRegionCacheRef.current = {};
+    setPage(1);
+    setSearch("");
+    setSortBy("estado");
+    setSortDir("asc");
+    setFilterEstados(new Set());
+    setFilterCategoria("");
+    setSelected(new Set());
+    setBulkEstado("");
+    setBulkCategoria("");
+    setBulkLoading(false);
+    setCacheApiPage(0);
+    setProductosCache({});
+    productosCacheRef.current = {};
   }
 
   function closeRegiones() {
-    if (globalEditRegionsSaving) {
-      if (!confirm("Hay cambios guardándose. ¿Cerrar de todas formas?")) return;
-    }
-    if (globalEditingRegions.size > 0) {
-      if (!confirm("Tenés cambios sin guardar. ¿Cerrar de todas formas?")) return;
-    }
     setRegionesOpen(false);
-    setGlobalEditingRegions(new Set());
-    setGlobalEditRegionsData({});
-    setGlobalSelectedRegions(new Set());
-    setGlobalBulkEstado("");
+    setSelected(new Set());
+    setBulkEstado("");
+    setBulkCategoria("");
   }
 
   function handleCancelAllGlobalRegions() {
@@ -996,18 +988,29 @@ export default function ProductosPage() {
     <div className="p-6 max-w-7xl">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-lg font-bold text-gray-900">Productos</h1>
+          <h1 className="text-lg font-bold text-gray-900">Regiones</h1>
           <p className="text-sm text-gray-500">
-            {total} producto{total !== 1 ? "s" : ""}
+            {globalRegionTotal} región{globalRegionTotal !== 1 ? "es" : ""}
           </p>
         </div>
-        <button
-          onClick={openCreate}
-          disabled={!canCreate}
-          className="px-4 py-2 bg-gray-900 text-white text-sm font-medium rounded-lg hover:bg-gray-800 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-        >
-          + Nuevo
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={openCreate}
+            disabled={!canCreate}
+            className="px-4 py-2 bg-gray-900 text-white text-sm font-medium rounded-lg hover:bg-gray-800 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            + Nuevo producto
+          </button>
+          <button
+            onClick={openRegiones}
+            className="px-3 py-2 text-sm border border-gray-200 rounded-lg text-gray-500 hover:bg-gray-50 transition-colors inline-flex items-center gap-1.5"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+            </svg>
+            Productos
+          </button>
+        </div>
       </div>
 
       {toast && (
@@ -1043,15 +1046,141 @@ export default function ProductosPage() {
         </div>
       )}
 
-      {selected.size > 0 && canUpdate && (
+      <div className="flex items-center gap-3 mb-4 flex-wrap">
+        <div className="relative flex-1 min-w-[200px] max-w-sm">
+          <input
+            type="text"
+            placeholder="Buscar por producto, código o región..."
+            value={globalRegionSearch}
+            onChange={(e) => {
+              setGlobalRegionSearch(e.target.value);
+              setGlobalRegionPage(1);
+              setGlobalRegionCachePage(0);
+              setGlobalRegionListCache({});
+              globalRegionCacheRef.current = {};
+            }}
+            className="w-full pl-8 pr-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+          />
+          <svg className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+        </div>
+        <div className="flex items-center gap-2 flex-wrap">
+          {ESTADOS.map((e) => (
+            <label key={e} className="flex items-center gap-1 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={globalFilterEstados.has(e)}
+                onChange={() => {
+                  setGlobalFilterEstados((prev) => {
+                    const next = new Set(prev);
+                    if (next.has(e)) next.delete(e);
+                    else next.add(e);
+                    return next;
+                  });
+                  setGlobalRegionPage(1);
+                  setGlobalRegionCachePage(0);
+                  setGlobalRegionListCache({});
+                  globalRegionCacheRef.current = {};
+                }}
+                className="w-3.5 h-3.5 rounded border-gray-300 text-blue-600"
+              />
+              <span className={`text-xs font-medium rounded-full px-2 py-0.5 ${ESTADO_COLOR[e]}`}>
+                {ESTADO_LABEL[e]}
+              </span>
+            </label>
+          ))}
+        </div>
+        <div className="flex items-center gap-2 flex-wrap">
+          <select
+            value={globalFilterRegion}
+            onChange={(e) => {
+              setGlobalFilterRegion(e.target.value);
+              setGlobalRegionPage(1);
+              setGlobalRegionCachePage(0);
+              setGlobalRegionListCache({});
+              globalRegionCacheRef.current = {};
+            }}
+            className="text-xs border border-gray-200 rounded px-2 py-1.5 text-gray-500"
+          >
+            <option value="">Todas las regiones</option>
+            {regiones.map((r) => (
+              <option key={r.id} value={r.id}>{r.nombre}</option>
+            ))}
+          </select>
+          <div className="flex items-center gap-1 text-xs text-gray-400">
+            <span>$</span>
+            <input
+              type="text"
+              inputMode="numeric"
+              placeholder="Min"
+              value={globalFilterPrecioMin}
+              onChange={(e) => {
+                setGlobalFilterPrecioMin(e.target.value.replace(/\D/g, ""));
+                setGlobalRegionPage(1);
+                setGlobalRegionCachePage(0);
+                setGlobalRegionListCache({});
+                globalRegionCacheRef.current = {};
+              }}
+              className="w-16 text-xs border border-gray-200 rounded px-2 py-1 text-gray-500"
+            />
+            <span>—</span>
+            <input
+              type="text"
+              inputMode="numeric"
+              placeholder="Max"
+              value={globalFilterPrecioMax}
+              onChange={(e) => {
+                setGlobalFilterPrecioMax(e.target.value.replace(/\D/g, ""));
+                setGlobalRegionPage(1);
+                setGlobalRegionCachePage(0);
+                setGlobalRegionListCache({});
+                globalRegionCacheRef.current = {};
+              }}
+              className="w-16 text-xs border border-gray-200 rounded px-2 py-1 text-gray-500"
+            />
+            <span>$</span>
+          </div>
+        </div>
+      </div>
+
+      {globalEditingRegions.size > 0 && (
+        <div className="mb-3 p-2 bg-blue-50 border border-blue-100 rounded-lg flex items-center gap-2">
+          <span className="text-xs text-blue-700">
+            {globalEditingRegions.size} región{globalEditingRegions.size !== 1 ? "es" : ""} en edición
+          </span>
+          <div className="flex-1" />
+          <button
+            onClick={handleCancelAllGlobalRegions}
+            disabled={globalEditRegionsSaving}
+            className="px-3 py-1 text-xs text-gray-600 hover:bg-white/50 rounded transition-colors disabled:opacity-40"
+          >
+            Cancelar
+          </button>
+          <button
+            onClick={handleSaveAllGlobalRegions}
+            disabled={globalEditRegionsSaving}
+            className="px-3 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 transition-colors inline-flex items-center gap-1.5"
+          >
+            {globalEditRegionsSaving ? (
+              <><svg className="animate-spin w-3 h-3" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg> Guardando...</>
+            ) : (
+              `Guardar ${globalEditingRegions.size} cambio${globalEditingRegions.size !== 1 ? "s" : ""}`
+            )}
+          </button>
+        </div>
+      )}
+
+      {globalSelectedRegions.size > 0 && !globalEditingRegions.size && canUpdate && (
         <div className="mb-4 p-3 bg-blue-50 border border-blue-100 rounded-lg flex items-center gap-3 flex-wrap">
           <span className="text-sm text-blue-700 font-medium">
-            {selected.size} seleccionado{selected.size !== 1 ? "s" : ""}
+            {globalSelectedRegions.size} seleccionada{globalSelectedRegions.size !== 1 ? "s" : ""}
           </span>
           <select
-            value={bulkEstado}
-            onChange={(e) => setBulkEstado(e.target.value)}
-            className="px-2 py-1.5 text-sm border border-blue-200 rounded bg-white"
+            value={globalBulkEstado}
+            onChange={(e) => setGlobalBulkEstado(e.target.value)}
+            disabled={globalBulkLoading}
+            className="px-2 py-1.5 text-sm border border-blue-200 rounded bg-white disabled:opacity-50"
           >
             <option value="">Cambiar estado...</option>
             {ESTADOS.map((e) => (
@@ -1061,528 +1190,332 @@ export default function ProductosPage() {
             ))}
           </select>
           <button
-            onClick={handleBulkSetEstado}
-            disabled={!bulkEstado || bulkLoading}
+            onClick={handleGlobalBulkSetEstado}
+            disabled={!globalBulkEstado || globalBulkLoading}
             className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 transition-colors inline-flex items-center gap-1.5"
           >
-            {bulkLoading ? (
+            {globalBulkLoading ? (
               <><svg className="animate-spin w-3.5 h-3.5" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg> Aplicando...</>
             ) : (
               "Aplicar"
             )}
           </button>
-          <div className="w-px h-5 bg-blue-200" />
-          <select
-            value={bulkCategoria}
-            onChange={(e) => setBulkCategoria(e.target.value)}
-            className="px-2 py-1.5 text-sm border border-blue-200 rounded bg-white"
-          >
-            <option value="">Asignar categoría...</option>
-            {categorias.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.nombre}
-              </option>
-            ))}
-          </select>
-          <button
-            onClick={handleBulkSetCategoria}
-            disabled={!bulkCategoria || bulkLoading}
-            className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 transition-colors inline-flex items-center gap-1.5"
-          >
-            {bulkLoading ? (
-              <><svg className="animate-spin w-3.5 h-3.5" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg> Asignando...</>
-            ) : (
-              "Asignar"
-            )}
-          </button>
         </div>
       )}
 
-      <div className="mb-4 flex items-center gap-2">
-        <div className="relative flex-1 max-w-xs">
-          <input
-            type="text"
-            placeholder="Buscar por nombre o código..."
-            value={search}
-            onChange={(e) => {
-              setSearch(e.target.value);
-              setPage(1);
-              setCacheApiPage(0);
-              setProductosCache({});
-              productosCacheRef.current = {};
-              setSortBy("estado");
-              setSortDir("asc");
-            }}
-            className="w-full pl-8 pr-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-          />
-          <svg className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-          </svg>
+      {globalRegionLoading ? (
+        <div className="py-12 text-center text-gray-400 text-sm">Cargando...</div>
+      ) : globalRegionList.length === 0 ? (
+        <div className="py-12 text-center text-gray-400 text-sm">
+          {globalRegionSearch || globalFilterEstados.size > 0 ? "Sin resultados" : "No hay regiones"}
         </div>
-        <div className="relative">
-          <button
-            onClick={() => setShowFilters((v) => !v)}
-            className={`px-3 py-2 text-sm border rounded-lg transition-colors inline-flex items-center gap-1.5 ${
-              showFilters || activeFilterCount > 0
-                ? "bg-blue-50 border-blue-200 text-blue-700"
-                : "border-gray-200 text-gray-500 hover:bg-gray-50"
-            }`}
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
-            </svg>
-            Filtros
-            {activeFilterCount > 0 && (
-              <span className="inline-flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-blue-600 rounded-full">
-                {activeFilterCount}
-              </span>
-            )}
-          </button>
-          {showFilters && (
-            <div className="absolute top-full right-0 mt-2 w-72 bg-white rounded-xl border border-gray-100 shadow-lg z-40 p-4">
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-sm font-medium text-gray-700">Filtros avanzados</span>
-                {activeFilterCount > 0 && (
-                  <button
-                    onClick={() => {
-                      setFilterEstados(new Set());
-                      setFilterCategoria("");
-                    }}
-                    className="text-xs text-blue-600 hover:text-blue-800"
-                  >
-                    Limpiar todo
-                  </button>
-                )}
-              </div>
-
-              <div className="mb-3">
-                <label className="block text-xs font-medium text-gray-500 mb-2">Estado</label>
-                <div className="space-y-1.5 max-h-40 overflow-y-auto">
-                  {ESTADOS.map((e) => (
-                    <label key={e} className="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={filterEstados.has(e)}
-                        onChange={() => {
-                          setFilterEstados((prev) => {
-                            const next = new Set(prev);
-                            if (next.has(e)) next.delete(e);
-                            else next.add(e);
-                            return next;
-                          });
-                          setPage(1);
-                          setCacheApiPage(0);
-                          setProductosCache({});
-                          productosCacheRef.current = {};
-                        }}
-                        className="w-3.5 h-3.5 rounded border-gray-300 text-blue-600"
-                      />
-                      <span className={`text-xs font-medium rounded-full px-2 py-0.5 ${ESTADO_COLOR[e]}`}>
-                        {ESTADO_LABEL[e]}
-                      </span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-medium text-gray-500 mb-2">Categoría</label>
-                <select
-                  value={filterCategoria}
-                  onChange={(e) => {
-                    setFilterCategoria(e.target.value);
-                    setPage(1);
-                    setCacheApiPage(0);
-                    setProductosCache({});
-                    productosCacheRef.current = {};
-                  }}
-                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-                >
-                  <option value="">Todas las categorías</option>
-                  {categorias.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.nombre}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-xs font-medium text-gray-500 mb-2">Ordenar por</label>
-                <div className="flex items-center gap-1.5">
-                  <select
-                    value={sortBy}
-                    onChange={(e) => {
-                      const v = e.target.value as SortableColumn;
-                      setSortBy(v);
-                      setSortDir(v === "fecha_creacion" || v === "fecha_actualizacion" ? "desc" : v === "estado" ? "asc" : "asc");
-                      setPage(1);
-                      setCacheApiPage(0);
-                      setProductosCache({});
-                      productosCacheRef.current = {};
-                    }}
-                    className="flex-1 px-2 py-1.5 text-xs border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-                  >
-                    <option value="fecha_creacion">Fecha creación</option>
-                    <option value="fecha_actualizacion">Fecha actualización</option>
-                    <option value="codigo">Código</option>
-                    <option value="nombre">Nombre</option>
-                    <option value="estado">Estado</option>
-                  </select>
-                  <button
-                    onClick={() => {
-                      setSortDir((d) => (d === "asc" ? "desc" : "asc"));
-                      setPage(1);
-                      setCacheApiPage(0);
-                      setProductosCache({});
-                      productosCacheRef.current = {};
-                    }}
-                    className="px-2 py-1.5 text-xs border border-gray-200 rounded-lg text-gray-500 hover:bg-gray-50"
-                    title={sortDir === "asc" ? "Ascendente" : "Descendente"}
-                  >
-                    {sortDir === "asc" ? "↑ Asc" : "↓ Desc"}
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-        <button
-          onClick={openRegiones}
-          className="px-3 py-2 text-sm border border-gray-200 rounded-lg text-gray-500 hover:bg-gray-50 transition-colors inline-flex items-center gap-1.5"
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
-          </svg>
-          Regiones
-        </button>
-      </div>
-
-      {error && (
-        <div className="mb-4 p-3 rounded-lg bg-red-50 border border-red-100 text-red-600 text-sm">
-          {error}
-        </div>
-      )}
-
-      <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm table-fixed min-w-[700px]">
+      ) : (
+        <>
+          <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
+            <div className="overflow-x-auto">
+          <table className="w-full text-sm table-fixed">
             <thead>
               <tr className="border-b border-gray-100 bg-gray-50/50">
-                <th className="w-10 py-3 px-4">
+                <th className="w-10 py-2.5 px-3">
                   <input
                     type="checkbox"
-                    disabled={bulkLoading || savingProductId !== null || !canUpdate}
+                    disabled={globalBulkLoading || globalEditRegionsSaving || !canUpdate}
                     onChange={(e) => {
                       if (e.target.checked) {
-                        setSelected(new Set(displayedProductos.map((p) => p.id)));
+                        setGlobalSelectedRegions(new Set(displayedGlobalRegions.map((pr) => pr.codigo)));
                       } else {
-                        setSelected(new Set());
+                        setGlobalSelectedRegions(new Set());
                       }
                     }}
                     checked={
-                      selected.size === displayedProductos.length && displayedProductos.length > 0
+                      displayedGlobalRegions.length > 0 &&
+                      globalSelectedRegions.size === displayedGlobalRegions.length
                     }
                     className="w-4 h-4 rounded border-gray-300 text-blue-600 disabled:opacity-40 disabled:cursor-not-allowed"
                   />
                 </th>
-                <th className="text-left py-2.5 px-3 font-medium text-gray-500 w-[80px]">
-                  <button onClick={() => handleSort("codigo")} className="inline-flex items-center hover:text-gray-700 transition-colors">
-                    Código{renderSortArrow("codigo")}
+                <th className="text-left py-2.5 px-3 font-medium text-gray-500 text-xs w-[130px]">
+                  <button onClick={() => handleGlobalRegionSort("producto")} className="inline-flex items-center hover:text-gray-700">
+                    Producto{renderGlobalRegionSortArrow("producto")}
                   </button>
                 </th>
-                <th className="text-left py-2.5 px-3 font-medium text-gray-500 min-w-[200px]">
-                  <button onClick={() => handleSort("nombre")} className="inline-flex items-center hover:text-gray-700 transition-colors">
-                    Nombre{renderSortArrow("nombre")}
+                <th className="text-left py-2.5 px-3 font-medium text-gray-500 text-xs w-[90px]">
+                  <button onClick={() => handleGlobalRegionSort("codigo")} className="inline-flex items-center hover:text-gray-700">
+                    Código{renderGlobalRegionSortArrow("codigo")}
                   </button>
                 </th>
-                <th className="text-left py-2.5 px-3 font-medium text-gray-500 w-[50px] lg:w-[155px]">
-                  <button onClick={() => handleSort("estado")} className="inline-flex items-center hover:text-gray-700 transition-colors">
-                    <span className="hidden lg:inline">Estado</span>{renderSortArrow("estado")}
+                <th className="text-left py-2.5 px-3 font-medium text-gray-500 text-xs w-[100px]">
+                  <button onClick={() => handleGlobalRegionSort("region")} className="inline-flex items-center hover:text-gray-700">
+                    Región{renderGlobalRegionSortArrow("region")}
                   </button>
                 </th>
-                <th className="text-left py-2.5 px-3 font-medium text-gray-500 w-[80px]">Categoría</th>
-                <th className="text-left py-2.5 px-3 font-medium text-gray-500 w-[60px]">Regiones</th>
-                <th className="w-[80px] py-2.5 px-3" />
+                <th className="text-right py-2.5 px-3 font-medium text-gray-500 text-xs w-[90px]">
+                  <button onClick={() => handleGlobalRegionSort("precio")} className="inline-flex items-center hover:text-gray-700">
+                    Precio{renderGlobalRegionSortArrow("precio")}
+                  </button>
+                </th>
+                <th className="text-right py-2.5 px-3 font-medium text-gray-500 text-xs w-[100px]">
+                  <span className="text-gray-400 cursor-default">Precio Oferta</span>
+                </th>
+                <th className="text-left py-2.5 px-3 font-medium text-gray-500 text-xs w-[110px]">
+                  <button onClick={() => handleGlobalRegionSort("estado")} className="inline-flex items-center hover:text-gray-700">
+                    Estado{renderGlobalRegionSortArrow("estado")}
+                  </button>
+                </th>
+                <th className="w-[60px] py-2.5 px-3" />
               </tr>
             </thead>
             <tbody>
-              {loading ? (
-                <tr>
-                  <td colSpan={7} className="py-12 text-center text-gray-400 text-sm">
-                    Cargando...
-                  </td>
-                </tr>
-              ) : total === 0 ? (
-                <tr>
-                  <td colSpan={7} className="py-12 text-center text-gray-400 text-sm">
-                    No hay productos
-                  </td>
-                </tr>
-              ) : (
-                displayedProductos.map((p) => (
-                  <tr
-                    key={p.id}
-                    className={
-                      "border-b border-gray-50 hover:bg-gray-50/50 transition-colors " +
-                      (savingProductId === p.id ? "bg-blue-100 animate-pulse" : bulkLoading && selected.has(p.id) ? "bg-blue-100 animate-pulse" : selected.has(p.id) ? "bg-blue-50/50" : "")
-                    }
-                  >
-                    <td className="py-2.5 px-4">
+              {(() => {
+                let lastPid: number | null = null;
+                let groupIdx = 0;
+                return displayedGlobalRegions.map((pr, idx, arr) => {
+                const isEditing = globalEditingRegions.has(pr.codigo);
+                const editData = globalEditRegionsData[pr.codigo];
+                const productoPadre = (pr as any).producto as { id: number; nombre: string; codigo: string; Categorias?: { nombre: string } | null };
+                const isBulkSelected = globalSelectedRegions.has(pr.codigo);
+                if (lastPid !== null && pr.producto_id !== lastPid) groupIdx++;
+                const isNewGroup = lastPid === null || pr.producto_id !== lastPid;
+                lastPid = pr.producto_id;
+                const groupBg = (!globalBulkLoading && !globalEditRegionsSaving && !isBulkSelected)
+                  ? (groupIdx % 2 === 0 ? "" : "bg-gray-50/50")
+                  : "";
+                return (
+                  <tr key={pr.codigo} className={
+                    "border-b border-gray-50 hover:bg-gray-100/50 transition-colors " + groupBg + " " +
+                    (globalBulkLoading && isBulkSelected ? "bg-blue-100 animate-pulse" : 
+                     globalEditRegionsSaving && isEditing ? "bg-blue-100 animate-pulse" : "")
+                  }>
+                    <td className="py-2.5 px-3 text-center relative">
+                      {isNewGroup && (
+                        <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-6 bg-blue-400/60 rounded-r" />
+                      )}
                       <input
                         type="checkbox"
-                        disabled={bulkLoading || savingProductId === p.id || !canUpdate}
-                        checked={selected.has(p.id)}
+                        disabled={globalBulkLoading || globalEditingRegions.size > 0 || globalEditRegionsSaving || !canUpdate}
+                        checked={isBulkSelected}
                         onChange={() => {
-                          setSelected((s) => {
+                          setGlobalSelectedRegions((s) => {
                             const next = new Set(s);
-                            if (next.has(p.id)) next.delete(p.id);
-                            else next.add(p.id);
+                            if (next.has(pr.codigo)) next.delete(pr.codigo);
+                            else next.add(pr.codigo);
                             return next;
                           });
                         }}
                         className="w-4 h-4 rounded border-gray-300 text-blue-600 disabled:opacity-40 disabled:cursor-not-allowed"
                       />
                     </td>
-                    <td className="py-2 px-3 font-mono text-gray-500 text-xs truncate">{p.codigo}</td>
-                    <td className="py-2 px-3 text-gray-900">
-                      <span className="truncate block" title={p.nombre}>{p.nombre}</span>
+                    <td className="py-2 px-3">
+                      <span className={"truncate block" + (isNewGroup ? " font-semibold" : " text-gray-400")} title={productoPadre?.nombre ?? ""}>{productoPadre?.nombre ?? "—"}</span>
+                      <span className="text-gray-400 text-xs">{productoPadre?.codigo ?? ""}</span>
                     </td>
-                    <td className="py-2 px-3 relative">
-                      <div className="hidden lg:block">
-                        {(bulkLoading && selected.has(p.id)) || changingStatus.has(p.id) || savingProductId === p.id ? (
-                          <span className="inline-flex items-center gap-1.5 text-xs font-medium rounded-full px-2.5 py-0.5 bg-gray-100 text-gray-400">
-                            <svg className="animate-spin w-3 h-3" fill="none" viewBox="0 0 24 24">
-                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                            </svg>
-                            {ESTADO_LABEL[p.estado]}
-                          </span>
-                        ) : (
-                          <select
-                            value={p.estado}
-                            onChange={(e) => handleChangeStatus(p.id, e.target.value as EstadoRegion)}
-                            disabled={!canUpdate}
-                            className={`text-xs font-medium rounded-full px-2 py-0.5 border-0 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed ${ESTADO_COLOR[p.estado]}`}
-                            style={{ appearance: "auto" }}
-                          >
-                            {ESTADOS.map((e) => (
-                              <option key={e} value={e}>
-                                {ESTADO_LABEL[e]}
-                              </option>
-                            ))}
-                          </select>
-                        )}
-                      </div>
-                      <div className="lg:hidden">
-                        {(bulkLoading && selected.has(p.id)) || changingStatus.has(p.id) || savingProductId === p.id ? (
-                          <svg className="animate-spin w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24">
+                    <td className="py-2 px-3 font-mono text-gray-500 text-xs truncate">{pr.codigo}</td>
+                    <td className="py-2 px-3 text-gray-900 truncate">{pr.region.nombre}</td>
+                    <td className="py-2 px-3 text-right">
+                      {isEditing && globalEditRegionsSaving ? (
+                        <span className="inline-flex items-center gap-1.5 text-xs text-gray-400">
+                          <svg className="animate-spin w-3 h-3" fill="none" viewBox="0 0 24 24">
                             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                           </svg>
-                        ) : (
-                          <button
-                            onClick={() => setEstadoMenuId(estadoMenuId === p.id ? null : p.id)}
-                            disabled={bulkLoading || savingProductId === p.id || !canUpdate}
-                            className={`w-4 h-4 rounded-full border-2 border-white ring-1 ${p.estado === 'HABILITADO' ? 'bg-green-500 ring-green-300' : p.estado === 'PENDIENTE' ? 'bg-amber-500 ring-amber-300' : p.estado === 'DESHABILITADO' ? 'bg-red-500 ring-red-300' : p.estado === 'DESHABILITADO_POR_PRECIO' ? 'bg-purple-500 ring-purple-300' : 'bg-orange-500 ring-orange-300'} disabled:opacity-50 disabled:cursor-not-allowed`}
-                            title={ESTADO_LABEL[p.estado]}
-                          />
-                        )}
-                        {estadoMenuId === p.id && (
-                          <>
-                            <div className="fixed inset-0 z-10" onClick={() => setEstadoMenuId(null)} />
-                            <div className="absolute left-0 top-full mt-1 w-40 bg-white border border-gray-100 rounded-lg shadow-lg z-20 py-1">
-                              {ESTADOS.map((e) => (
-                                <button
-                                  key={e}
-                                  onClick={() => {
-                                    handleChangeStatus(p.id, e);
-                                    setEstadoMenuId(null);
-                                  }}
-                                  className={`w-full text-left px-3 py-1.5 text-xs hover:bg-gray-50 flex items-center gap-2 ${p.estado === e ? 'font-medium text-gray-900' : 'text-gray-600'}`}
-                                >
-                                  <span className={`w-2.5 h-2.5 rounded-full ${e === 'HABILITADO' ? 'bg-green-500' : e === 'PENDIENTE' ? 'bg-amber-500' : e === 'DESHABILITADO' ? 'bg-red-500' : e === 'DESHABILITADO_POR_PRECIO' ? 'bg-purple-500' : 'bg-orange-500'}`} />
-                                  {ESTADO_LABEL[e]}
-                                </button>
-                              ))}
-                            </div>
-                          </>
-                        )}
-                      </div>
+                          ${editData?.precio ?? pr.precio.toFixed(2)}
+                        </span>
+                      ) : isEditing ? (
+                        <input
+                          type="number"
+                          step="0.01"
+                          value={editData?.precio ?? ""}
+                          onChange={(e) =>
+                            setGlobalEditRegionsData((prev) => ({
+                              ...prev,
+                              [pr.codigo]: { ...prev[pr.codigo], precio: e.target.value, estado: prev[pr.codigo]?.estado ?? pr.estado, productoId: prev[pr.codigo]?.productoId ?? productoPadre?.id ?? 0 },
+                            }))
+                          }
+                          className="w-24 px-2 py-1 text-xs text-right border border-gray-200 rounded focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                        />
+                      ) : (
+                        <span className="text-gray-900">${pr.precio.toFixed(2)}</span>
+                      )}
                     </td>
-                    <td className="py-2 px-3 text-gray-500 text-xs truncate">
-                      {p.Categorias?.nombre ?? "—"}
-                    </td>
-                    <td className="py-2 px-3 text-gray-500 text-xs">
-                      {p.producto_regiones?.length ?? 0}
-                    </td>
-                    <td className="py-2 px-3 relative">
-                      <div className="hidden lg:flex items-center gap-0.5">
-                        {(bulkLoading && selected.has(p.id)) || savingProductId === p.id ? (
-                          <svg className="animate-spin w-4 h-4 text-blue-500" fill="none" viewBox="0 0 24 24">
+                    <td className="py-2 px-3 text-right text-gray-400 text-xs">—</td>
+                    <td className="py-2 px-3">
+                      {isEditing && globalEditRegionsSaving ? (
+                        <span className="inline-flex items-center gap-1.5 text-xs font-medium rounded-full px-2.5 py-0.5 bg-gray-100 text-gray-400">
+                          <svg className="animate-spin w-3 h-3" fill="none" viewBox="0 0 24 24">
                             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                           </svg>
-                        ) : (
-                          <>
-                            <button
-                              onClick={() => openEdit(p)}
-                              disabled={!canUpdate}
-                              className="p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-                              title="Editar"
-                            >
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                              </svg>
-                            </button>
-                            <button
-                              onClick={() => openDetail(p.id)}
-                              className="p-1 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
-                              title="Detalle"
-                            >
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
-                              </svg>
-                            </button>
-                          </>
-                        )}
-                      </div>
-                      <div className="lg:hidden">
-                        {(bulkLoading && selected.has(p.id)) || savingProductId === p.id ? (
-                          <svg className="animate-spin w-4 h-4 text-blue-500" fill="none" viewBox="0 0 24 24">
+                          {ESTADO_LABEL[pr.estado]}
+                        </span>
+                      ) : isEditing ? (
+                        <select
+                          value={editData?.estado ?? pr.estado}
+                          onChange={(e) =>
+                            setGlobalEditRegionsData((prev) => ({
+                              ...prev,
+                              [pr.codigo]: { ...prev[pr.codigo], precio: prev[pr.codigo]?.precio ?? String(pr.precio), estado: e.target.value as EstadoRegion, productoId: prev[pr.codigo]?.productoId ?? productoPadre?.id ?? 0 },
+                            }))
+                          }
+                          className={`text-xs font-medium rounded-full px-2 py-0.5 border-0 cursor-pointer ${ESTADO_COLOR[editData?.estado ?? pr.estado]}`}
+                          style={{ appearance: "auto" }}
+                        >
+                          {ESTADOS.map((e) => (
+                            <option key={e} value={e}>{ESTADO_LABEL[e]}</option>
+                          ))}
+                        </select>
+                      ) : globalBulkLoading && isBulkSelected ? (
+                        <span className="inline-flex items-center gap-1.5 text-xs font-medium rounded-full px-2.5 py-0.5 bg-gray-100 text-gray-400">
+                          <svg className="animate-spin w-3 h-3" fill="none" viewBox="0 0 24 24">
                             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                           </svg>
-                        ) : (
-                          <button
-                            onClick={() => setMenuOpenId(menuOpenId === p.id ? null : p.id)}
-                            className="p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded transition-colors"
-                            title="Acciones"
-                          >
-                            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                              <circle cx="12" cy="5" r="1.5" />
-                              <circle cx="12" cy="12" r="1.5" />
-                              <circle cx="12" cy="19" r="1.5" />
-                            </svg>
-                          </button>
-                        )}
-                        {menuOpenId === p.id && (
-                          <>
-                            <div className="fixed inset-0 z-10" onClick={() => setMenuOpenId(null)} />
-                            <div className="absolute right-0 top-full mt-1 w-32 bg-white border border-gray-100 rounded-lg shadow-lg z-20 py-1">
-                              {canUpdate && (
-                              <button
-                                onClick={() => { setMenuOpenId(null); openEdit(p); }}
-                                className="w-full text-left px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-50 flex items-center gap-2"
-                              >
-                                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                </svg>
-                                Editar
-                              </button>
-                              )}
-                              <button
-                                onClick={() => { setMenuOpenId(null); openDetail(p.id); }}
-                                className="w-full text-left px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-50 flex items-center gap-2"
-                              >
-                                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
-                                </svg>
-                                Detalle
-                              </button>
-                            </div>
-                          </>
-                        )}
-                      </div>
+                          {ESTADO_LABEL[pr.estado]}
+                        </span>
+                      ) : (
+                        <span className={`text-xs font-medium rounded-full px-2.5 py-0.5 ${ESTADO_COLOR[pr.estado]}`}>
+                          {ESTADO_LABEL[pr.estado]}
+                        </span>
+                      )}
+                    </td>
+                    <td className="py-2 px-3">
+                      {(globalBulkLoading && isBulkSelected) || (globalEditRegionsSaving && isEditing) ? (
+                        <svg className="animate-spin w-4 h-4 text-blue-500" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                        </svg>
+                      ) : (
+                        <button
+                          onClick={() => {
+                          if (isEditing) {
+                            setGlobalEditingRegions((prev) => {
+                              const next = new Set(prev);
+                              next.delete(pr.codigo);
+                              return next;
+                            });
+                            setGlobalEditRegionsData((prev) => {
+                              const next = { ...prev };
+                              delete next[pr.codigo];
+                              return next;
+                            });
+                          } else {
+                            setGlobalEditingRegions((prev) => {
+                              const next = new Set(prev);
+                              next.add(pr.codigo);
+                              return next;
+                            });
+                            setGlobalEditRegionsData((prev) => ({
+                              ...prev,
+                              [pr.codigo]: prev[pr.codigo] ?? { precio: String(pr.precio), estado: pr.estado, productoId: productoPadre?.id ?? 0 },
+                            }));
+                          }
+                        }}
+                        disabled={globalEditRegionsSaving || !canUpdate}
+                        className={`px-2 py-1 text-xs rounded transition-colors ${
+                          isEditing
+                            ? "text-red-400 hover:text-red-600 hover:bg-red-50"
+                            : "text-gray-400 hover:text-gray-600 hover:bg-gray-100"
+                        } disabled:opacity-40`}
+                      >
+                        {isEditing ? "Descartar" : "Editar"}
+                      </button>
+                      )}
                     </td>
                   </tr>
-                ))
-              )}
+                );
+              })})()}
             </tbody>
           </table>
-        </div>
-
-        {total > 0 && (
-          <div className="flex items-center justify-between px-4 py-3 border-t border-gray-100">
-            <div className="flex items-center gap-3">
-              <span className="text-xs text-gray-400">
-                Página {page} de {totalPages}
-              </span>
-              <select
-                value={showCustomInput || ![10, 20, 50, 100].includes(perPage) ? -1 : perPage}
-                onChange={(e) => {
-                  const v = Number(e.target.value);
-                  if (v === -1) {
-                    setShowCustomInput(true);
-                    setCustomPerPage("");
-                  } else {
-                    setShowCustomInput(false);
-                    setPerPage(v);
-                    setPage(1);
-                    setCacheApiPage(0);
-                    setProductosCache({});
-                    productosCacheRef.current = {};
-                  }
-                }}
-                disabled={bulkLoading || savingProductId !== null}
-                className="text-xs border border-gray-200 rounded px-2 py-1 text-gray-500 disabled:opacity-40"
-              >
-                <option value={10}>10 / pág</option>
-                <option value={20}>20 / pág</option>
-                <option value={50}>50 / pág</option>
-                <option value={100}>100 / pág</option>
-                <option value={-1}>Personalizado...</option>
-              </select>
-              {(showCustomInput || ![10, 20, 50, 100].includes(perPage)) && (
-                <input
-                  type="text"
-                  inputMode="numeric"
-                  disabled={bulkLoading || savingProductId !== null}
-                  value={showCustomInput ? customPerPage : String(perPage)}
-                  onFocus={(e) => {
-                    if (!showCustomInput) {
-                      setShowCustomInput(true);
-                      setCustomPerPage(String(perPage));
-                    }
-                  }}
-                  onChange={(e) => {
-                    const raw = e.target.value.replace(/\D/g, "");
-                    setCustomPerPage(raw);
-                  }}
-                  onBlur={(e) => {
-                    const n = parseInt(e.target.value, 10);
-                    if (n > 0) { setPerPage(n); setShowCustomInput(false); setPage(1); setCacheApiPage(0); setProductosCache({}); productosCacheRef.current = {}; }
-                    else if (n <= 0) { setShowCustomInput(false); }
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      const n = parseInt((e.target as HTMLInputElement).value, 10);
-                      if (n > 0) { setPerPage(n); setShowCustomInput(false); setPage(1); setCacheApiPage(0); setProductosCache({}); productosCacheRef.current = {}; }
-                    }
-                  }}
-                  className="w-16 text-xs border border-gray-200 rounded px-2 py-1 text-gray-500"
-                />
-              )}
-            </div>
-            <div className="flex gap-1">
-              <button
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
-                disabled={page === 1 || bulkLoading || savingProductId !== null}
-                className="px-3 py-1.5 text-xs border border-gray-200 rounded hover:bg-gray-50 disabled:opacity-40 transition-colors"
-              >
-                Anterior
-              </button>
-              <button
-                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                disabled={page === totalPages || bulkLoading || savingProductId !== null}
-                className="px-3 py-1.5 text-xs border border-gray-200 rounded hover:bg-gray-50 disabled:opacity-40 transition-colors"
-              >
-                Siguiente
-              </button>
             </div>
           </div>
-        )}
-      </div>
+
+          {globalRegionTotal > 0 && (
+            <div className="flex items-center justify-between px-1 py-3">
+              <div className="flex items-center gap-3">
+                <span className="text-xs text-gray-400">
+                  Página {globalRegionPage} de {globalRegionTotalPages}
+                </span>
+                <select
+                  value={showGlobalCustomInput || ![10, 20, 50, 100].includes(globalRegionPerPage) ? -1 : globalRegionPerPage}
+                  onChange={(e) => {
+                    const v = Number(e.target.value);
+                    if (v === -1) {
+                      setShowGlobalCustomInput(true);
+                      setGlobalCustomPerPage("");
+                    } else {
+                      setShowGlobalCustomInput(false);
+                      setGlobalRegionPerPage(v);
+                      setGlobalRegionPage(1);
+                      setGlobalRegionCachePage(0);
+                      setGlobalRegionListCache({});
+                      globalRegionCacheRef.current = {};
+                    }
+                  }}
+                  disabled={globalBulkLoading || globalEditRegionsSaving}
+                  className="text-xs border border-gray-200 rounded px-2 py-1 text-gray-500 disabled:opacity-40"
+                >
+                  <option value={10}>10 / pág</option>
+                  <option value={20}>20 / pág</option>
+                  <option value={50}>50 / pág</option>
+                  <option value={100}>100 / pág</option>
+                  <option value={-1}>Personalizado...</option>
+                </select>
+                {(showGlobalCustomInput || ![10, 20, 50, 100].includes(globalRegionPerPage)) && (
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    disabled={globalBulkLoading || globalEditRegionsSaving}
+                    value={showGlobalCustomInput ? globalCustomPerPage : String(globalRegionPerPage)}
+                    onFocus={(e) => {
+                      if (!showGlobalCustomInput) {
+                        setShowGlobalCustomInput(true);
+                        setGlobalCustomPerPage(String(globalRegionPerPage));
+                      }
+                    }}
+                    onChange={(e) => {
+                      const raw = e.target.value.replace(/\D/g, "");
+                      setGlobalCustomPerPage(raw);
+                    }}
+                    onBlur={(e) => {
+                      const n = parseInt(e.target.value, 10);
+                      if (n > 0) { setGlobalRegionPerPage(n); setShowGlobalCustomInput(false); setGlobalRegionPage(1); setGlobalRegionCachePage(0); setGlobalRegionListCache({}); globalRegionCacheRef.current = {}; }
+                      else if (n <= 0) { setShowGlobalCustomInput(false); }
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        const n = parseInt((e.target as HTMLInputElement).value, 10);
+                        if (n > 0) { setGlobalRegionPerPage(n); setShowGlobalCustomInput(false); setGlobalRegionPage(1); setGlobalRegionCachePage(0); setGlobalRegionListCache({}); globalRegionCacheRef.current = {}; }
+                      }
+                    }}
+                    className="w-16 text-xs border border-gray-200 rounded px-2 py-1 text-gray-500 disabled:opacity-40"
+                  />
+                )}
+              </div>
+              <div className="flex gap-1">
+                <button
+                  onClick={() => setGlobalRegionPage((p) => Math.max(1, p - 1))}
+                  disabled={globalRegionPage === 1 || globalBulkLoading || globalEditRegionsSaving}
+                  className="px-3 py-1.5 text-xs border border-gray-200 rounded hover:bg-gray-50 disabled:opacity-40"
+                >
+                  Anterior
+                </button>
+                <button
+                  onClick={() => setGlobalRegionPage((p) => Math.min(globalRegionTotalPages, p + 1))}
+                  disabled={globalRegionPage === globalRegionTotalPages || globalBulkLoading || globalEditRegionsSaving}
+                  className="px-3 py-1.5 text-xs border border-gray-200 rounded hover:bg-gray-50 disabled:opacity-40"
+                >
+                  Siguiente
+                </button>
+              </div>
+            </div>
+          )}
+        </>
+      )}
+
+      {error && (
+        <div className="mb-4 p-3 rounded-lg bg-red-50 border border-red-100 text-red-600 text-sm">
+          {error}
+        </div>
+      )}
 
       {modal.open && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
@@ -2080,154 +2013,40 @@ export default function ProductosPage() {
           <div className="absolute inset-0 bg-black/30" onClick={closeRegiones} />
           <div className="relative bg-white w-full max-w-6xl h-full overflow-y-auto shadow-2xl p-6">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-base font-bold text-gray-900">
-                Regiones ({globalRegionTotal})
-              </h2>
-              <button
-                onClick={closeRegiones}
-                className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-
-            <div className="flex items-center gap-3 mb-4 flex-wrap">
-              <div className="relative flex-1 min-w-[200px] max-w-sm">
-                <input
-                  type="text"
-                  placeholder="Buscar por producto, código o región..."
-                  value={globalRegionSearch}
-                  onChange={(e) => {
-                    setGlobalRegionSearch(e.target.value);
-                    setGlobalRegionPage(1);
-                    setGlobalRegionCachePage(0);
-                    setGlobalRegionListCache({});
-                    globalRegionCacheRef.current = {};
-                  }}
-                  className="w-full pl-8 pr-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-                />
-                <svg className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
+              <div>
+                <h2 className="text-base font-bold text-gray-900">Productos</h2>
+                <p className="text-sm text-gray-500">
+                  {total} producto{total !== 1 ? "s" : ""}
+                </p>
               </div>
-              <div className="flex items-center gap-2 flex-wrap">
-                {ESTADOS.map((e) => (
-                  <label key={e} className="flex items-center gap-1 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={globalFilterEstados.has(e)}
-                      onChange={() => {
-                        setGlobalFilterEstados((prev) => {
-                          const next = new Set(prev);
-                          if (next.has(e)) next.delete(e);
-                          else next.add(e);
-                          return next;
-                        });
-                        setGlobalRegionPage(1);
-                        setGlobalRegionCachePage(0);
-                        setGlobalRegionListCache({});
-                        globalRegionCacheRef.current = {};
-                      }}
-                      className="w-3.5 h-3.5 rounded border-gray-300 text-blue-600"
-                    />
-                    <span className={`text-xs font-medium rounded-full px-2 py-0.5 ${ESTADO_COLOR[e]}`}>
-                      {ESTADO_LABEL[e]}
-                    </span>
-                  </label>
-                ))}
-              </div>
-              <div className="flex items-center gap-2 flex-wrap">
-                <select
-                  value={globalFilterRegion}
-                  onChange={(e) => {
-                    setGlobalFilterRegion(e.target.value);
-                    setGlobalRegionPage(1);
-                    setGlobalRegionCachePage(0);
-                    setGlobalRegionListCache({});
-                    globalRegionCacheRef.current = {};
-                  }}
-                  className="text-xs border border-gray-200 rounded px-2 py-1.5 text-gray-500"
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={openCreate}
+                  disabled={!canCreate}
+                  className="px-4 py-2 bg-gray-900 text-white text-sm font-medium rounded-lg hover:bg-gray-800 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                 >
-                  <option value="">Todas las regiones</option>
-                  {regiones.map((r) => (
-                    <option key={r.id} value={r.id}>{r.nombre}</option>
-                  ))}
-                </select>
-                <div className="flex items-center gap-1 text-xs text-gray-400">
-                  <span>$</span>
-                  <input
-                    type="text"
-                    inputMode="numeric"
-                    placeholder="Min"
-                    value={globalFilterPrecioMin}
-                    onChange={(e) => {
-                      setGlobalFilterPrecioMin(e.target.value.replace(/\D/g, ""));
-                      setGlobalRegionPage(1);
-                      setGlobalRegionCachePage(0);
-                      setGlobalRegionListCache({});
-                      globalRegionCacheRef.current = {};
-                    }}
-                    className="w-16 text-xs border border-gray-200 rounded px-2 py-1 text-gray-500"
-                  />
-                  <span>—</span>
-                  <input
-                    type="text"
-                    inputMode="numeric"
-                    placeholder="Max"
-                    value={globalFilterPrecioMax}
-                    onChange={(e) => {
-                      setGlobalFilterPrecioMax(e.target.value.replace(/\D/g, ""));
-                      setGlobalRegionPage(1);
-                      setGlobalRegionCachePage(0);
-                      setGlobalRegionListCache({});
-                      globalRegionCacheRef.current = {};
-                    }}
-                    className="w-16 text-xs border border-gray-200 rounded px-2 py-1 text-gray-500"
-                  />
-                  <span>$</span>
-                </div>
+                  + Nuevo
+                </button>
+                <button
+                  onClick={closeRegiones}
+                  className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
               </div>
             </div>
 
-            {globalEditingRegions.size > 0 && (
-              <div className="mb-3 p-2 bg-blue-50 border border-blue-100 rounded-lg flex items-center gap-2">
-                <span className="text-xs text-blue-700">
-                  {globalEditingRegions.size} región{globalEditingRegions.size !== 1 ? "es" : ""} en edición
-                </span>
-                <div className="flex-1" />
-                <button
-                  onClick={handleCancelAllGlobalRegions}
-                  disabled={globalEditRegionsSaving}
-                  className="px-3 py-1 text-xs text-gray-600 hover:bg-white/50 rounded transition-colors disabled:opacity-40"
-                >
-                  Cancelar
-                </button>
-                <button
-                  onClick={handleSaveAllGlobalRegions}
-                  disabled={globalEditRegionsSaving}
-                  className="px-3 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 transition-colors inline-flex items-center gap-1.5"
-                >
-                  {globalEditRegionsSaving ? (
-                    <><svg className="animate-spin w-3 h-3" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg> Guardando...</>
-                  ) : (
-                    `Guardar ${globalEditingRegions.size} cambio${globalEditingRegions.size !== 1 ? "s" : ""}`
-                  )}
-                </button>
-              </div>
-            )}
-
-            {globalSelectedRegions.size > 0 && !globalEditingRegions.size && canUpdate && (
-              <div className="mb-3 p-3 bg-blue-50 border border-blue-100 rounded-lg flex items-center gap-3 flex-wrap">
+            {selected.size > 0 && canUpdate && (
+              <div className="mb-4 p-3 bg-blue-50 border border-blue-100 rounded-lg flex items-center gap-3 flex-wrap">
                 <span className="text-sm text-blue-700 font-medium">
-                  {globalSelectedRegions.size} seleccionada{globalSelectedRegions.size !== 1 ? "s" : ""}
+                  {selected.size} seleccionado{selected.size !== 1 ? "s" : ""}
                 </span>
                 <select
-                  value={globalBulkEstado}
-                  onChange={(e) => setGlobalBulkEstado(e.target.value)}
-                  disabled={globalBulkLoading}
-                  className="px-2 py-1.5 text-sm border border-blue-200 rounded bg-white disabled:opacity-50"
+                  value={bulkEstado}
+                  onChange={(e) => setBulkEstado(e.target.value)}
+                  className="px-2 py-1.5 text-sm border border-blue-200 rounded bg-white"
                 >
                   <option value="">Cambiar estado...</option>
                   {ESTADOS.map((e) => (
@@ -2237,250 +2056,450 @@ export default function ProductosPage() {
                   ))}
                 </select>
                 <button
-                  onClick={handleGlobalBulkSetEstado}
-                  disabled={!globalBulkEstado || globalBulkLoading}
+                  onClick={handleBulkSetEstado}
+                  disabled={!bulkEstado || bulkLoading}
                   className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 transition-colors inline-flex items-center gap-1.5"
                 >
-                  {globalBulkLoading ? (
+                  {bulkLoading ? (
                     <><svg className="animate-spin w-3.5 h-3.5" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg> Aplicando...</>
                   ) : (
                     "Aplicar"
                   )}
                 </button>
+                <div className="w-px h-5 bg-blue-200" />
+                <select
+                  value={bulkCategoria}
+                  onChange={(e) => setBulkCategoria(e.target.value)}
+                  className="px-2 py-1.5 text-sm border border-blue-200 rounded bg-white"
+                >
+                  <option value="">Asignar categoría...</option>
+                  {categorias.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.nombre}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  onClick={handleBulkSetCategoria}
+                  disabled={!bulkCategoria || bulkLoading}
+                  className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 transition-colors inline-flex items-center gap-1.5"
+                >
+                  {bulkLoading ? (
+                    <><svg className="animate-spin w-3.5 h-3.5" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg> Asignando...</>
+                  ) : (
+                    "Asignar"
+                  )}
+                </button>
               </div>
             )}
 
-            {globalRegionLoading ? (
+            <div className="mb-4 flex items-center gap-2">
+              <div className="relative flex-1 max-w-xs">
+                <input
+                  type="text"
+                  placeholder="Buscar por nombre o código..."
+                  value={search}
+                  onChange={(e) => {
+                    setSearch(e.target.value);
+                    setPage(1);
+                    setCacheApiPage(0);
+                    setProductosCache({});
+                    productosCacheRef.current = {};
+                    setSortBy("estado");
+                    setSortDir("asc");
+                  }}
+                  className="w-full pl-8 pr-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                />
+                <svg className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </div>
+              <div className="relative">
+                <button
+                  onClick={() => setShowFilters((v) => !v)}
+                  className={`px-3 py-2 text-sm border rounded-lg transition-colors inline-flex items-center gap-1.5 ${
+                    showFilters || activeFilterCount > 0
+                      ? "bg-blue-50 border-blue-200 text-blue-700"
+                      : "border-gray-200 text-gray-500 hover:bg-gray-50"
+                  }`}
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                  </svg>
+                  Filtros
+                  {activeFilterCount > 0 && (
+                    <span className="inline-flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-blue-600 rounded-full">
+                      {activeFilterCount}
+                    </span>
+                  )}
+                </button>
+                {showFilters && (
+                  <div className="absolute top-full right-0 mt-2 w-72 bg-white rounded-xl border border-gray-100 shadow-lg z-40 p-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="text-sm font-medium text-gray-700">Filtros avanzados</span>
+                      {activeFilterCount > 0 && (
+                        <button
+                          onClick={() => {
+                            setFilterEstados(new Set());
+                            setFilterCategoria("");
+                          }}
+                          className="text-xs text-blue-600 hover:text-blue-800"
+                        >
+                          Limpiar todo
+                        </button>
+                      )}
+                    </div>
+
+                    <div className="mb-3">
+                      <label className="block text-xs font-medium text-gray-500 mb-2">Estado</label>
+                      <div className="space-y-1.5 max-h-40 overflow-y-auto">
+                        {ESTADOS.map((e) => (
+                          <label key={e} className="flex items-center gap-2 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={filterEstados.has(e)}
+                              onChange={() => {
+                                setFilterEstados((prev) => {
+                                  const next = new Set(prev);
+                                  if (next.has(e)) next.delete(e);
+                                  else next.add(e);
+                                  return next;
+                                });
+                                setPage(1);
+                                setCacheApiPage(0);
+                                setProductosCache({});
+                                productosCacheRef.current = {};
+                              }}
+                              className="w-3.5 h-3.5 rounded border-gray-300 text-blue-600"
+                            />
+                            <span className={`text-xs font-medium rounded-full px-2 py-0.5 ${ESTADO_COLOR[e]}`}>
+                              {ESTADO_LABEL[e]}
+                            </span>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-medium text-gray-500 mb-2">Categoría</label>
+                      <select
+                        value={filterCategoria}
+                        onChange={(e) => {
+                          setFilterCategoria(e.target.value);
+                          setPage(1);
+                          setCacheApiPage(0);
+                          setProductosCache({});
+                          productosCacheRef.current = {};
+                        }}
+                        className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                      >
+                        <option value="">Todas las categorías</option>
+                        {categorias.map((c) => (
+                          <option key={c.id} value={c.id}>
+                            {c.nombre}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-medium text-gray-500 mb-2">Ordenar por</label>
+                      <div className="flex items-center gap-1.5">
+                        <select
+                          value={sortBy}
+                          onChange={(e) => {
+                            const v = e.target.value as SortableColumn;
+                            setSortBy(v);
+                            setSortDir(v === "fecha_creacion" || v === "fecha_actualizacion" ? "desc" : v === "estado" ? "asc" : "asc");
+                            setPage(1);
+                            setCacheApiPage(0);
+                            setProductosCache({});
+                            productosCacheRef.current = {};
+                          }}
+                          className="flex-1 px-2 py-1.5 text-xs border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                        >
+                          <option value="fecha_creacion">Fecha creación</option>
+                          <option value="fecha_actualizacion">Fecha actualización</option>
+                          <option value="codigo">Código</option>
+                          <option value="nombre">Nombre</option>
+                          <option value="estado">Estado</option>
+                        </select>
+                        <button
+                          onClick={() => {
+                            setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+                            setPage(1);
+                            setCacheApiPage(0);
+                            setProductosCache({});
+                            productosCacheRef.current = {};
+                          }}
+                          className="px-2 py-1.5 text-xs border border-gray-200 rounded-lg text-gray-500 hover:bg-gray-50"
+                          title={sortDir === "asc" ? "Ascendente" : "Descendente"}
+                        >
+                          {sortDir === "asc" ? "↑ Asc" : "↓ Desc"}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {loading ? (
               <div className="py-12 text-center text-gray-400 text-sm">Cargando...</div>
-            ) : globalRegionList.length === 0 ? (
+            ) : total === 0 ? (
               <div className="py-12 text-center text-gray-400 text-sm">
-                {globalRegionSearch || globalFilterEstados.size > 0 ? "Sin resultados" : "No hay regiones"}
+                No hay productos
               </div>
             ) : (
               <>
                 <div className="border border-gray-100 rounded-lg overflow-hidden">
-                  <table className="w-full text-sm table-fixed">
-                    <thead>
-                      <tr className="border-b border-gray-100 bg-gray-50/50">
-                        <th className="w-10 py-2.5 px-3">
-                          <input
-                            type="checkbox"
-                            disabled={globalBulkLoading || globalEditRegionsSaving || !canUpdate}
-                            onChange={(e) => {
-                              if (e.target.checked) {
-                                setGlobalSelectedRegions(new Set(displayedGlobalRegions.map((pr) => pr.codigo)));
-                              } else {
-                                setGlobalSelectedRegions(new Set());
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm table-fixed min-w-[700px]">
+                      <thead>
+                        <tr className="border-b border-gray-100 bg-gray-50/50">
+                          <th className="w-10 py-3 px-4">
+                            <input
+                              type="checkbox"
+                              disabled={bulkLoading || savingProductId !== null || !canUpdate}
+                              onChange={(e) => {
+                                if (e.target.checked) {
+                                  setSelected(new Set(displayedProductos.map((p) => p.id)));
+                                } else {
+                                  setSelected(new Set());
+                                }
+                              }}
+                              checked={
+                                selected.size === displayedProductos.length && displayedProductos.length > 0
                               }
-                            }}
-                            checked={
-                              displayedGlobalRegions.length > 0 &&
-                              globalSelectedRegions.size === displayedGlobalRegions.length
+                              className="w-4 h-4 rounded border-gray-300 text-blue-600 disabled:opacity-40 disabled:cursor-not-allowed"
+                            />
+                          </th>
+                          <th className="text-left py-2.5 px-3 font-medium text-gray-500 w-[80px]">
+                            <button onClick={() => handleSort("codigo")} className="inline-flex items-center hover:text-gray-700 transition-colors">
+                              Código{renderSortArrow("codigo")}
+                            </button>
+                          </th>
+                          <th className="text-left py-2.5 px-3 font-medium text-gray-500 min-w-[200px]">
+                            <button onClick={() => handleSort("nombre")} className="inline-flex items-center hover:text-gray-700 transition-colors">
+                              Nombre{renderSortArrow("nombre")}
+                            </button>
+                          </th>
+                          <th className="text-left py-2.5 px-3 font-medium text-gray-500 w-[50px] lg:w-[155px]">
+                            <button onClick={() => handleSort("estado")} className="inline-flex items-center hover:text-gray-700 transition-colors">
+                              <span className="hidden lg:inline">Estado</span>{renderSortArrow("estado")}
+                            </button>
+                          </th>
+                          <th className="text-left py-2.5 px-3 font-medium text-gray-500 w-[80px]">Categoría</th>
+                          <th className="text-left py-2.5 px-3 font-medium text-gray-500 w-[60px]">Regiones</th>
+                          <th className="w-[80px] py-2.5 px-3" />
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {displayedProductos.map((p) => (
+                          <tr
+                            key={p.id}
+                            className={
+                              "border-b border-gray-50 hover:bg-gray-50/50 transition-colors " +
+                              (savingProductId === p.id ? "bg-blue-100 animate-pulse" : bulkLoading && selected.has(p.id) ? "bg-blue-100 animate-pulse" : selected.has(p.id) ? "bg-blue-50/50" : "")
                             }
-                            className="w-4 h-4 rounded border-gray-300 text-blue-600 disabled:opacity-40 disabled:cursor-not-allowed"
-                          />
-                        </th>
-                        <th className="text-left py-2.5 px-3 font-medium text-gray-500 text-xs w-[130px]">
-                          <button onClick={() => handleGlobalRegionSort("producto")} className="inline-flex items-center hover:text-gray-700">
-                            Producto{renderGlobalRegionSortArrow("producto")}
-                          </button>
-                        </th>
-                        <th className="text-left py-2.5 px-3 font-medium text-gray-500 text-xs w-[90px]">
-                          <button onClick={() => handleGlobalRegionSort("codigo")} className="inline-flex items-center hover:text-gray-700">
-                            Código{renderGlobalRegionSortArrow("codigo")}
-                          </button>
-                        </th>
-                        <th className="text-left py-2.5 px-3 font-medium text-gray-500 text-xs w-[100px]">
-                          <button onClick={() => handleGlobalRegionSort("region")} className="inline-flex items-center hover:text-gray-700">
-                            Región{renderGlobalRegionSortArrow("region")}
-                          </button>
-                        </th>
-                        <th className="text-right py-2.5 px-3 font-medium text-gray-500 text-xs w-[90px]">
-                          <button onClick={() => handleGlobalRegionSort("precio")} className="inline-flex items-center hover:text-gray-700">
-                            Precio{renderGlobalRegionSortArrow("precio")}
-                          </button>
-                        </th>
-                        <th className="text-left py-2.5 px-3 font-medium text-gray-500 text-xs w-[110px]">
-                          <button onClick={() => handleGlobalRegionSort("estado")} className="inline-flex items-center hover:text-gray-700">
-                            Estado{renderGlobalRegionSortArrow("estado")}
-                          </button>
-                        </th>
-                        <th className="w-[60px] py-2.5 px-3" />
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {displayedGlobalRegions.map((pr) => {
-                        const isEditing = globalEditingRegions.has(pr.codigo);
-                        const editData = globalEditRegionsData[pr.codigo];
-                        const productoPadre = (pr as any).producto as { id: number; nombre: string; codigo: string; Categorias?: { nombre: string } | null };
-                        const isBulkSelected = globalSelectedRegions.has(pr.codigo);
-                        return (
-                          <tr key={pr.codigo} className={
-                            "border-b border-gray-50 hover:bg-gray-50/50 transition-colors " +
-                            (globalBulkLoading && isBulkSelected ? "bg-blue-100 animate-pulse" : 
-                             globalEditRegionsSaving && isEditing ? "bg-blue-100 animate-pulse" :
-                             isBulkSelected ? "bg-blue-50/50" : "")
-                          }>
-                            <td className="py-2.5 px-3 text-center">
+                          >
+                            <td className="py-2.5 px-4">
                               <input
                                 type="checkbox"
-                                disabled={globalBulkLoading || globalEditingRegions.size > 0 || globalEditRegionsSaving || !canUpdate}
-                                checked={isBulkSelected}
+                                disabled={bulkLoading || savingProductId === p.id || !canUpdate}
+                                checked={selected.has(p.id)}
                                 onChange={() => {
-                                  setGlobalSelectedRegions((s) => {
+                                  setSelected((s) => {
                                     const next = new Set(s);
-                                    if (next.has(pr.codigo)) next.delete(pr.codigo);
-                                    else next.add(pr.codigo);
+                                    if (next.has(p.id)) next.delete(p.id);
+                                    else next.add(p.id);
                                     return next;
                                   });
                                 }}
                                 className="w-4 h-4 rounded border-gray-300 text-blue-600 disabled:opacity-40 disabled:cursor-not-allowed"
                               />
                             </td>
-                            <td className="py-2 px-3">
-                              <span className="truncate block" title={productoPadre?.nombre ?? ""}>{productoPadre?.nombre ?? "—"}</span>
-                              <span className="text-gray-400 text-xs">{productoPadre?.codigo ?? ""}</span>
+                            <td className="py-2 px-3 font-mono text-gray-500 text-xs truncate">{p.codigo}</td>
+                            <td className="py-2 px-3 text-gray-900">
+                              <span className="truncate block" title={p.nombre}>{p.nombre}</span>
                             </td>
-                            <td className="py-2 px-3 font-mono text-gray-500 text-xs truncate">{pr.codigo}</td>
-                            <td className="py-2 px-3 text-gray-900 truncate">{pr.region.nombre}</td>
-                            <td className="py-2 px-3 text-right">
-                              {isEditing && globalEditRegionsSaving ? (
-                                <span className="inline-flex items-center gap-1.5 text-xs text-gray-400">
-                                  <svg className="animate-spin w-3 h-3" fill="none" viewBox="0 0 24 24">
+                            <td className="py-2 px-3 relative">
+                              <div className="hidden lg:block">
+                                {(bulkLoading && selected.has(p.id)) || changingStatus.has(p.id) || savingProductId === p.id ? (
+                                  <span className="inline-flex items-center gap-1.5 text-xs font-medium rounded-full px-2.5 py-0.5 bg-gray-100 text-gray-400">
+                                    <svg className="animate-spin w-3 h-3" fill="none" viewBox="0 0 24 24">
+                                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                                    </svg>
+                                    {ESTADO_LABEL[p.estado]}
+                                  </span>
+                                ) : (
+                                  <select
+                                    value={p.estado}
+                                    onChange={(e) => handleChangeStatus(p.id, e.target.value as EstadoRegion)}
+                                    disabled={!canUpdate}
+                                    className={`text-xs font-medium rounded-full px-2 py-0.5 border-0 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed ${ESTADO_COLOR[p.estado]}`}
+                                    style={{ appearance: "auto" }}
+                                  >
+                                    {ESTADOS.map((e) => (
+                                      <option key={e} value={e}>
+                                        {ESTADO_LABEL[e]}
+                                      </option>
+                                    ))}
+                                  </select>
+                                )}
+                              </div>
+                              <div className="lg:hidden">
+                                {(bulkLoading && selected.has(p.id)) || changingStatus.has(p.id) || savingProductId === p.id ? (
+                                  <svg className="animate-spin w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24">
                                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                                   </svg>
-                                  ${editData?.precio ?? pr.precio.toFixed(2)}
-                                </span>
-                              ) : isEditing ? (
-                                <input
-                                  type="number"
-                                  step="0.01"
-                                  value={editData?.precio ?? ""}
-                                  onChange={(e) =>
-                                    setGlobalEditRegionsData((prev) => ({
-                                      ...prev,
-                                      [pr.codigo]: { ...prev[pr.codigo], precio: e.target.value, estado: prev[pr.codigo]?.estado ?? pr.estado, productoId: prev[pr.codigo]?.productoId ?? productoPadre?.id ?? 0 },
-                                    }))
-                                  }
-                                  className="w-24 px-2 py-1 text-xs text-right border border-gray-200 rounded focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-                                />
-                              ) : (
-                                <span className="text-gray-900">${pr.precio.toFixed(2)}</span>
-                              )}
+                                ) : (
+                                  <button
+                                    onClick={() => setEstadoMenuId(estadoMenuId === p.id ? null : p.id)}
+                                    disabled={bulkLoading || savingProductId === p.id || !canUpdate}
+                                    className={`w-4 h-4 rounded-full border-2 border-white ring-1 ${p.estado === 'HABILITADO' ? 'bg-green-500 ring-green-300' : p.estado === 'PENDIENTE' ? 'bg-amber-500 ring-amber-300' : p.estado === 'DESHABILITADO' ? 'bg-red-500 ring-red-300' : p.estado === 'DESHABILITADO_POR_PRECIO' ? 'bg-purple-500 ring-purple-300' : 'bg-orange-500 ring-orange-300'} disabled:opacity-50 disabled:cursor-not-allowed`}
+                                    title={ESTADO_LABEL[p.estado]}
+                                  />
+                                )}
+                                {estadoMenuId === p.id && (
+                                  <>
+                                    <div className="fixed inset-0 z-10" onClick={() => setEstadoMenuId(null)} />
+                                    <div className="absolute left-0 top-full mt-1 w-40 bg-white border border-gray-100 rounded-lg shadow-lg z-20 py-1">
+                                      {ESTADOS.map((e) => (
+                                        <button
+                                          key={e}
+                                          onClick={() => {
+                                            handleChangeStatus(p.id, e);
+                                            setEstadoMenuId(null);
+                                          }}
+                                          className={`w-full text-left px-3 py-1.5 text-xs hover:bg-gray-50 flex items-center gap-2 ${p.estado === e ? 'font-medium text-gray-900' : 'text-gray-600'}`}
+                                        >
+                                          <span className={`w-2.5 h-2.5 rounded-full ${e === 'HABILITADO' ? 'bg-green-500' : e === 'PENDIENTE' ? 'bg-amber-500' : e === 'DESHABILITADO' ? 'bg-red-500' : e === 'DESHABILITADO_POR_PRECIO' ? 'bg-purple-500' : 'bg-orange-500'}`} />
+                                          {ESTADO_LABEL[e]}
+                                        </button>
+                                      ))}
+                                    </div>
+                                  </>
+                                )}
+                              </div>
                             </td>
-                            <td className="py-2 px-3">
-                              {isEditing && globalEditRegionsSaving ? (
-                                <span className="inline-flex items-center gap-1.5 text-xs font-medium rounded-full px-2.5 py-0.5 bg-gray-100 text-gray-400">
-                                  <svg className="animate-spin w-3 h-3" fill="none" viewBox="0 0 24 24">
+                            <td className="py-2 px-3 text-gray-500 text-xs truncate">
+                              {p.Categorias?.nombre ?? "—"}
+                            </td>
+                            <td className="py-2 px-3 text-gray-500 text-xs">
+                              {p.producto_regiones?.length ?? 0}
+                            </td>
+                            <td className="py-2 px-3 relative">
+                              <div className="hidden lg:flex items-center gap-0.5">
+                                {(bulkLoading && selected.has(p.id)) || savingProductId === p.id ? (
+                                  <svg className="animate-spin w-4 h-4 text-blue-500" fill="none" viewBox="0 0 24 24">
                                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                                   </svg>
-                                  {ESTADO_LABEL[pr.estado]}
-                                </span>
-                              ) : isEditing ? (
-                                <select
-                                  value={editData?.estado ?? pr.estado}
-                                  onChange={(e) =>
-                                    setGlobalEditRegionsData((prev) => ({
-                                      ...prev,
-                                      [pr.codigo]: { ...prev[pr.codigo], precio: prev[pr.codigo]?.precio ?? String(pr.precio), estado: e.target.value as EstadoRegion, productoId: prev[pr.codigo]?.productoId ?? productoPadre?.id ?? 0 },
-                                    }))
-                                  }
-                                  className={`text-xs font-medium rounded-full px-2 py-0.5 border-0 cursor-pointer ${ESTADO_COLOR[editData?.estado ?? pr.estado]}`}
-                                  style={{ appearance: "auto" }}
-                                >
-                                  {ESTADOS.map((e) => (
-                                    <option key={e} value={e}>{ESTADO_LABEL[e]}</option>
-                                  ))}
-                                </select>
-                              ) : globalBulkLoading && isBulkSelected ? (
-                                <span className="inline-flex items-center gap-1.5 text-xs font-medium rounded-full px-2.5 py-0.5 bg-gray-100 text-gray-400">
-                                  <svg className="animate-spin w-3 h-3" fill="none" viewBox="0 0 24 24">
+                                ) : (
+                                  <>
+                                    <button
+                                      onClick={() => openEdit(p)}
+                                      disabled={!canUpdate}
+                                      className="p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                                      title="Editar"
+                                    >
+                                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                      </svg>
+                                    </button>
+                                    <button
+                                      onClick={() => openDetail(p.id)}
+                                      className="p-1 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                                      title="Detalle"
+                                    >
+                                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+                                      </svg>
+                                    </button>
+                                  </>
+                                )}
+                              </div>
+                              <div className="lg:hidden">
+                                {(bulkLoading && selected.has(p.id)) || savingProductId === p.id ? (
+                                  <svg className="animate-spin w-4 h-4 text-blue-500" fill="none" viewBox="0 0 24 24">
                                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                                   </svg>
-                                  {ESTADO_LABEL[pr.estado]}
-                                </span>
-                              ) : (
-                                <span className={`text-xs font-medium rounded-full px-2.5 py-0.5 ${ESTADO_COLOR[pr.estado]}`}>
-                                  {ESTADO_LABEL[pr.estado]}
-                                </span>
-                              )}
-                            </td>
-                            <td className="py-2 px-3">
-                              {(globalBulkLoading && isBulkSelected) || (globalEditRegionsSaving && isEditing) ? (
-                                <svg className="animate-spin w-4 h-4 text-blue-500" fill="none" viewBox="0 0 24 24">
-                                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                                </svg>
-                              ) : (
-                                <button
-                                  onClick={() => {
-                                  if (isEditing) {
-                                    setGlobalEditingRegions((prev) => {
-                                      const next = new Set(prev);
-                                      next.delete(pr.codigo);
-                                      return next;
-                                    });
-                                    setGlobalEditRegionsData((prev) => {
-                                      const next = { ...prev };
-                                      delete next[pr.codigo];
-                                      return next;
-                                    });
-                                  } else {
-                                    setGlobalEditingRegions((prev) => {
-                                      const next = new Set(prev);
-                                      next.add(pr.codigo);
-                                      return next;
-                                    });
-                                    setGlobalEditRegionsData((prev) => ({
-                                      ...prev,
-                                      [pr.codigo]: prev[pr.codigo] ?? { precio: String(pr.precio), estado: pr.estado, productoId: productoPadre?.id ?? 0 },
-                                    }));
-                                  }
-                                }}
-                                disabled={globalEditRegionsSaving || !canUpdate}
-                                className={`px-2 py-1 text-xs rounded transition-colors ${
-                                  isEditing
-                                    ? "text-red-400 hover:text-red-600 hover:bg-red-50"
-                                    : "text-gray-400 hover:text-gray-600 hover:bg-gray-100"
-                                } disabled:opacity-40`}
-                              >
-                                {isEditing ? "Descartar" : "Editar"}
-                              </button>
-                              )}
+                                ) : (
+                                  <button
+                                    onClick={() => setMenuOpenId(menuOpenId === p.id ? null : p.id)}
+                                    className="p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded transition-colors"
+                                    title="Acciones"
+                                  >
+                                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                                      <circle cx="12" cy="5" r="1.5" />
+                                      <circle cx="12" cy="12" r="1.5" />
+                                      <circle cx="12" cy="19" r="1.5" />
+                                    </svg>
+                                  </button>
+                                )}
+                                {menuOpenId === p.id && (
+                                  <>
+                                    <div className="fixed inset-0 z-10" onClick={() => setMenuOpenId(null)} />
+                                    <div className="absolute right-0 top-full mt-1 w-32 bg-white border border-gray-100 rounded-lg shadow-lg z-20 py-1">
+                                      {canUpdate && (
+                                      <button
+                                        onClick={() => { setMenuOpenId(null); openEdit(p); }}
+                                        className="w-full text-left px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-50 flex items-center gap-2"
+                                      >
+                                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                        </svg>
+                                        Editar
+                                      </button>
+                                      )}
+                                      <button
+                                        onClick={() => { setMenuOpenId(null); openDetail(p.id); }}
+                                        className="w-full text-left px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-50 flex items-center gap-2"
+                                      >
+                                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+                                        </svg>
+                                        Detalle
+                                      </button>
+                                    </div>
+                                  </>
+                                )}
+                              </div>
                             </td>
                           </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
 
-                {globalRegionTotal > 0 && (
+                {total > 0 && (
                   <div className="flex items-center justify-between px-1 py-3">
                     <div className="flex items-center gap-3">
                       <span className="text-xs text-gray-400">
-                        Página {globalRegionPage} de {globalRegionTotalPages}
+                        Página {page} de {totalPages}
                       </span>
                       <select
-                        value={showGlobalCustomInput || ![10, 20, 50, 100].includes(globalRegionPerPage) ? -1 : globalRegionPerPage}
+                        value={showCustomInput || ![10, 20, 50, 100].includes(perPage) ? -1 : perPage}
                         onChange={(e) => {
                           const v = Number(e.target.value);
                           if (v === -1) {
-                            setShowGlobalCustomInput(true);
-                            setGlobalCustomPerPage("");
+                            setShowCustomInput(true);
+                            setCustomPerPage("");
                           } else {
-                            setShowGlobalCustomInput(false);
-                            setGlobalRegionPerPage(v);
-                            setGlobalRegionPage(1);
-                            setGlobalRegionCachePage(0);
-                            setGlobalRegionListCache({});
-                            globalRegionCacheRef.current = {};
+                            setShowCustomInput(false);
+                            setPerPage(v);
+                            setPage(1);
+                            setCacheApiPage(0);
+                            setProductosCache({});
+                            productosCacheRef.current = {};
                           }
                         }}
-                        disabled={globalBulkLoading || globalEditRegionsSaving}
+                        disabled={bulkLoading || savingProductId !== null}
                         className="text-xs border border-gray-200 rounded px-2 py-1 text-gray-500 disabled:opacity-40"
                       >
                         <option value={10}>10 / pág</option>
@@ -2489,49 +2508,49 @@ export default function ProductosPage() {
                         <option value={100}>100 / pág</option>
                         <option value={-1}>Personalizado...</option>
                       </select>
-                      {(showGlobalCustomInput || ![10, 20, 50, 100].includes(globalRegionPerPage)) && (
+                      {(showCustomInput || ![10, 20, 50, 100].includes(perPage)) && (
                         <input
                           type="text"
                           inputMode="numeric"
-                          disabled={globalBulkLoading || globalEditRegionsSaving}
-                          value={showGlobalCustomInput ? globalCustomPerPage : String(globalRegionPerPage)}
+                          disabled={bulkLoading || savingProductId !== null}
+                          value={showCustomInput ? customPerPage : String(perPage)}
                           onFocus={(e) => {
-                            if (!showGlobalCustomInput) {
-                              setShowGlobalCustomInput(true);
-                              setGlobalCustomPerPage(String(globalRegionPerPage));
+                            if (!showCustomInput) {
+                              setShowCustomInput(true);
+                              setCustomPerPage(String(perPage));
                             }
                           }}
                           onChange={(e) => {
                             const raw = e.target.value.replace(/\D/g, "");
-                            setGlobalCustomPerPage(raw);
+                            setCustomPerPage(raw);
                           }}
                           onBlur={(e) => {
                             const n = parseInt(e.target.value, 10);
-                            if (n > 0) { setGlobalRegionPerPage(n); setShowGlobalCustomInput(false); setGlobalRegionPage(1); setGlobalRegionCachePage(0); setGlobalRegionListCache({}); globalRegionCacheRef.current = {}; }
-                            else if (n <= 0) { setShowGlobalCustomInput(false); }
+                            if (n > 0) { setPerPage(n); setShowCustomInput(false); setPage(1); setCacheApiPage(0); setProductosCache({}); productosCacheRef.current = {}; }
+                            else if (n <= 0) { setShowCustomInput(false); }
                           }}
                           onKeyDown={(e) => {
                             if (e.key === "Enter") {
                               const n = parseInt((e.target as HTMLInputElement).value, 10);
-                              if (n > 0) { setGlobalRegionPerPage(n); setShowGlobalCustomInput(false); setGlobalRegionPage(1); setGlobalRegionCachePage(0); setGlobalRegionListCache({}); globalRegionCacheRef.current = {}; }
+                              if (n > 0) { setPerPage(n); setShowCustomInput(false); setPage(1); setCacheApiPage(0); setProductosCache({}); productosCacheRef.current = {}; }
                             }
                           }}
-                  className="w-16 text-xs border border-gray-200 rounded px-2 py-1 text-gray-500 disabled:opacity-40"
+                          className="w-16 text-xs border border-gray-200 rounded px-2 py-1 text-gray-500"
                         />
                       )}
                     </div>
                     <div className="flex gap-1">
                       <button
-                        onClick={() => setGlobalRegionPage((p) => Math.max(1, p - 1))}
-                        disabled={globalRegionPage === 1 || globalBulkLoading || globalEditRegionsSaving}
-                        className="px-3 py-1.5 text-xs border border-gray-200 rounded hover:bg-gray-50 disabled:opacity-40"
+                        onClick={() => setPage((p) => Math.max(1, p - 1))}
+                        disabled={page === 1 || bulkLoading || savingProductId !== null}
+                        className="px-3 py-1.5 text-xs border border-gray-200 rounded hover:bg-gray-50 disabled:opacity-40 transition-colors"
                       >
                         Anterior
                       </button>
                       <button
-                        onClick={() => setGlobalRegionPage((p) => Math.min(globalRegionTotalPages, p + 1))}
-                        disabled={globalRegionPage === globalRegionTotalPages || globalBulkLoading || globalEditRegionsSaving}
-                        className="px-3 py-1.5 text-xs border border-gray-200 rounded hover:bg-gray-50 disabled:opacity-40"
+                        onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                        disabled={page === totalPages || bulkLoading || savingProductId !== null}
+                        className="px-3 py-1.5 text-xs border border-gray-200 rounded hover:bg-gray-50 disabled:opacity-40 transition-colors"
                       >
                         Siguiente
                       </button>
