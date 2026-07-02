@@ -1120,7 +1120,7 @@ export default function ProductosPage() {
         <div className="flex items-center gap-2">
           <button
             onClick={openRegiones}
-            className="px-3 py-2 text-sm border border-gray-200 rounded-lg text-gray-500 hover:bg-gray-50 transition-colors inline-flex items-center gap-1.5"
+            className="px-3 py-2 text-sm border border-gray-200 rounded-lg text-gray-500 hover:bg-gray-50 transition-colors inline-flex items-center gap-1.5 cursor-pointer"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
@@ -1155,7 +1155,7 @@ export default function ProductosPage() {
             </svg>
           )}
           <span className="font-medium">{toast.message}</span>
-          <button onClick={() => setToast(null)} className="ml-2 text-current opacity-40 hover:opacity-100 shrink-0">
+          <button onClick={() => setToast(null)} className="ml-2 text-current opacity-40 hover:opacity-100 shrink-0 cursor-pointer">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
@@ -1366,14 +1366,14 @@ export default function ProductosPage() {
           <button
             onClick={handleCancelAllGlobalRegions}
             disabled={globalEditRegionsSaving}
-            className="px-3 py-1 text-xs text-gray-600 hover:bg-white/50 rounded transition-colors disabled:opacity-40"
+            className="px-3 py-1 text-xs text-gray-600 hover:bg-white/50 rounded transition-colors disabled:opacity-40 cursor-pointer"
           >
             Cancelar
           </button>
           <button
             onClick={handleSaveAllGlobalRegions}
             disabled={globalEditRegionsSaving}
-            className="px-3 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 transition-colors inline-flex items-center gap-1.5"
+            className="px-3 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 transition-colors inline-flex items-center gap-1.5 cursor-pointer"
           >
             {globalEditRegionsSaving ? (
               <><svg className="animate-spin w-3 h-3" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg> Guardando...</>
@@ -1405,7 +1405,7 @@ export default function ProductosPage() {
           <button
             onClick={handleGlobalBulkSetEstado}
             disabled={!globalBulkEstado || globalBulkLoading}
-            className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 transition-colors inline-flex items-center gap-1.5"
+            className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 transition-colors inline-flex items-center gap-1.5 cursor-pointer"
           >
             {globalBulkLoading ? (
               <><svg className="animate-spin w-3.5 h-3.5" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg> Aplicando...</>
@@ -1448,22 +1448,22 @@ export default function ProductosPage() {
                   />
                 </th>
                 <th className="text-left py-2.5 px-3 font-medium text-gray-500 text-xs w-[130px]">
-                  <button onClick={() => handleGlobalRegionSort("producto")} className="inline-flex items-center hover:text-gray-700">
+                  <button onClick={() => handleGlobalRegionSort("producto")} className="inline-flex items-center hover:text-gray-700 cursor-pointer">
                     Producto{renderGlobalRegionSortArrow("producto")}
                   </button>
                 </th>
                 <th className="text-left py-2.5 px-3 font-medium text-gray-500 text-xs w-[90px]">
-                  <button onClick={() => handleGlobalRegionSort("codigo")} className="inline-flex items-center hover:text-gray-700">
+                  <button onClick={() => handleGlobalRegionSort("codigo")} className="inline-flex items-center hover:text-gray-700 cursor-pointer">
                     Código{renderGlobalRegionSortArrow("codigo")}
                   </button>
                 </th>
                 <th className="text-left py-2.5 px-3 font-medium text-gray-500 text-xs w-[100px]">
-                  <button onClick={() => handleGlobalRegionSort("region")} className="inline-flex items-center hover:text-gray-700">
+                  <button onClick={() => handleGlobalRegionSort("region")} className="inline-flex items-center hover:text-gray-700 cursor-pointer">
                     Región{renderGlobalRegionSortArrow("region")}
                   </button>
                 </th>
                 <th className="text-right py-2.5 px-3 font-medium text-gray-500 text-xs w-[90px]">
-                  <button onClick={() => handleGlobalRegionSort("precio")} className="inline-flex items-center hover:text-gray-700">
+                  <button onClick={() => handleGlobalRegionSort("precio")} className="inline-flex items-center hover:text-gray-700 cursor-pointer">
                     Precio{renderGlobalRegionSortArrow("precio")}
                   </button>
                 </th>
@@ -1471,7 +1471,7 @@ export default function ProductosPage() {
                   <span className="text-gray-400 cursor-default">Precio Oferta</span>
                 </th>
                 <th className="text-left py-2.5 px-3 font-medium text-gray-500 text-xs w-[110px]">
-                  <button onClick={() => handleGlobalRegionSort("estado")} className="inline-flex items-center hover:text-gray-700">
+                  <button onClick={() => handleGlobalRegionSort("estado")} className="inline-flex items-center hover:text-gray-700 cursor-pointer">
                     Estado{renderGlobalRegionSortArrow("estado")}
                   </button>
                 </th>
@@ -1550,10 +1550,22 @@ export default function ProductosPage() {
                           className="w-24 px-2 py-1 text-xs text-right border border-gray-200 rounded focus:outline-none focus:ring-2 focus:ring-blue-500/20 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                         />
                       ) : (
-                                      <span className="text-gray-900">${pr.precio.toFixed(2)}</span>
-                                    )}
-                                  </td>
-                                  <td className="py-2 px-3">
+                        <span className="text-gray-900">${pr.precio.toFixed(2)}</span>
+                      )}
+                    </td>
+                    <td className="py-2 px-3 text-right">
+                      {(() => {
+                        const offer = getBestOffer(pr);
+                        if (!offer) return <span className="text-gray-400 text-xs">—</span>;
+                        return (
+                          <span className="inline-flex flex-col items-end" title={`${offer.oferta.nombre} · ${formatDateRange(offer.oferta.fecha_inicio, offer.oferta.fecha_fin)}`}>
+                            <span className="text-green-700 font-medium">${offer.precio.toFixed(2)}</span>
+                            <span className="text-[10px] text-gray-400">{formatDateRange(offer.oferta.fecha_inicio, offer.oferta.fecha_fin)}</span>
+                          </span>
+                        );
+                      })()}
+                    </td>
+                    <td className="py-2 px-3">
                       {isEditing && globalEditRegionsSaving ? (
                         <span className="inline-flex items-center gap-1.5 text-xs font-medium rounded-full px-2.5 py-0.5 bg-gray-100 text-gray-400">
                           <svg className="animate-spin w-3 h-3" fill="none" viewBox="0 0 24 24">
@@ -1596,7 +1608,7 @@ export default function ProductosPage() {
                       {(globalBulkLoading && isBulkSelected) || (globalEditRegionsSaving && isEditing) ? (
                         <svg className="animate-spin w-4 h-4 text-blue-500" fill="none" viewBox="0 0 24 24">
                           <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                          <path className="opacity-75 cursor-pointer" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                         </svg>
                       ) : (
                         <button
@@ -1625,7 +1637,7 @@ export default function ProductosPage() {
                           }
                         }}
                         disabled={globalEditRegionsSaving || !canUpdate}
-                        className={`px-2 py-1 text-xs rounded transition-colors ${
+                        className={`px-2 py-1 text-xs rounded transition-colors cursor-pointer ${
                           isEditing
                             ? "text-red-400 hover:text-red-600 hover:bg-red-50"
                             : "text-gray-400 hover:text-gray-600 hover:bg-gray-100"
@@ -1720,14 +1732,14 @@ export default function ProductosPage() {
                 <button
                   onClick={() => setGlobalRegionPage((p) => Math.max(1, p - 1))}
                   disabled={globalRegionPage === 1 || globalBulkLoading || globalEditRegionsSaving}
-                  className="px-3 py-1.5 text-xs border border-gray-200 rounded hover:bg-gray-50 disabled:opacity-40"
+                  className="px-3 py-1.5 text-xs border border-gray-200 rounded hover:bg-gray-50 disabled:opacity-40 cursor-pointer"
                 >
                   Anterior
                 </button>
                 <button
                   onClick={() => setGlobalRegionPage((p) => Math.min(globalRegionTotalPages, p + 1))}
                   disabled={globalRegionPage === globalRegionTotalPages || globalBulkLoading || globalEditRegionsSaving}
-                  className="px-3 py-1.5 text-xs border border-gray-200 rounded hover:bg-gray-50 disabled:opacity-40"
+                  className="px-3 py-1.5 text-xs border border-gray-200 rounded hover:bg-gray-50 disabled:opacity-40 cursor-pointer"
                 >
                   Siguiente
                 </button>
@@ -1815,14 +1827,14 @@ export default function ProductosPage() {
                 <button
                   type="button"
                   onClick={closeModal}
-                  className="px-4 py-2 text-sm text-gray-600 hover:bg-gray-50 rounded-lg transition-colors"
+                  className="px-4 py-2 text-sm text-gray-600 hover:bg-gray-50 rounded-lg transition-colors cursor-pointer"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={saving}
-                  className="px-4 py-2 text-sm bg-gray-900 text-white rounded-lg hover:bg-gray-800 disabled:opacity-50 transition-colors"
+                  className="px-4 py-2 text-sm bg-gray-900 text-white rounded-lg hover:bg-gray-800 disabled:opacity-50 transition-colors cursor-pointer"
                 >
                   {saving ? "Guardando..." : "Guardar"}
                 </button>
@@ -1835,7 +1847,7 @@ export default function ProductosPage() {
       {detailOpen && (
         <div className="fixed inset-0 z-[60] flex items-start justify-end">
           <div className="absolute inset-0 bg-black/30" onClick={closeDetail} />
-          <div className="relative bg-white w-full max-w-xl h-full overflow-y-auto shadow-2xl p-6">
+          <div className="relative bg-white w-full max-w-2xl h-full overflow-y-auto shadow-2xl p-6">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-base font-bold text-gray-900 truncate max-w-[280px]" title={detailData?.nombre}>
                 {detailData ? detailData.nombre : "Detalle del producto"}
@@ -2001,14 +2013,14 @@ export default function ProductosPage() {
                       <button
                         onClick={handleCancelAllRegions}
                         disabled={editRegionsSaving}
-                        className="px-3 py-1 text-xs text-gray-600 hover:bg-white/50 rounded transition-colors disabled:opacity-40"
+                        className="px-3 py-1 text-xs text-gray-600 hover:bg-white/50 rounded transition-colors disabled:opacity-40 cursor-pointer"
                       >
                         Cancelar
                       </button>
                       <button
                         onClick={handleSaveAllRegions}
                         disabled={editRegionsSaving}
-                        className="px-3 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 transition-colors inline-flex items-center gap-1.5"
+                        className="px-3 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 transition-colors inline-flex items-center gap-1.5 cursor-pointer"
                       >
                         {editRegionsSaving ? (
                           <><svg className="animate-spin w-3 h-3" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg> Guardando...</>
@@ -2032,22 +2044,22 @@ export default function ProductosPage() {
                           <thead>
                             <tr className="border-b border-gray-100 bg-gray-50/50">
                               <th className="text-left py-2.5 px-3 font-medium text-gray-500 text-xs">
-                                <button onClick={() => handleRegionSort("region")} className="inline-flex items-center hover:text-gray-700">
+                                <button onClick={() => handleRegionSort("region")} className="inline-flex items-center hover:text-gray-700 cursor-pointer">
                                   Región{renderRegionSortArrow("region")}
                                 </button>
                               </th>
                               <th className="text-left py-2.5 px-3 font-medium text-gray-500 text-xs">
-                                <button onClick={() => handleRegionSort("codigo")} className="inline-flex items-center hover:text-gray-700">
+                                <button onClick={() => handleRegionSort("codigo")} className="inline-flex items-center hover:text-gray-700 cursor-pointer">
                                   Código{renderRegionSortArrow("codigo")}
                                 </button>
                               </th>
                               <th className="text-right py-2.5 px-3 font-medium text-gray-500 text-xs">
-                                <button onClick={() => handleRegionSort("precio")} className="inline-flex items-center hover:text-gray-700">
+                                <button onClick={() => handleRegionSort("precio")} className="inline-flex items-center hover:text-gray-700 cursor-pointer">
                                   Precio{renderRegionSortArrow("precio")}
                                 </button>
                               </th>
                               <th className="text-left py-2.5 px-3 font-medium text-gray-500 text-xs">
-                                <button onClick={() => handleRegionSort("estado")} className="inline-flex items-center hover:text-gray-700">
+                                <button onClick={() => handleRegionSort("estado")} className="inline-flex items-center hover:text-gray-700 cursor-pointer">
                                   Estado{renderRegionSortArrow("estado")}
                                 </button>
                               </th>
@@ -2182,14 +2194,14 @@ export default function ProductosPage() {
                             <button
                               onClick={() => setRegionPage((p) => Math.max(1, p - 1))}
                               disabled={regionPage === 1 || editRegionsSaving}
-                              className="px-2 py-1 text-xs border border-gray-200 rounded hover:bg-gray-50 disabled:opacity-40"
+                              className="px-2 py-1 text-xs border border-gray-200 rounded hover:bg-gray-50 disabled:opacity-40 cursor-pointer"
                             >
                               Anterior
                             </button>
                             <button
                               onClick={() => setRegionPage((p) => Math.min(regionTotalPages, p + 1))}
                               disabled={regionPage === regionTotalPages || editRegionsSaving}
-                              className="px-2 py-1 text-xs border border-gray-200 rounded hover:bg-gray-50 disabled:opacity-40"
+                              className="px-2 py-1 text-xs border border-gray-200 rounded hover:bg-gray-50 disabled:opacity-40 cursor-pointer"
                             >
                               Siguiente
                             </button>
@@ -2315,7 +2327,7 @@ export default function ProductosPage() {
                     <button
                       type="submit"
                       disabled={processingRegions}
-                      className="w-full px-4 py-2 text-sm bg-gray-900 text-white rounded-lg hover:bg-gray-800 disabled:opacity-50 transition-colors"
+                      className="w-full px-4 py-2 text-sm bg-gray-900 text-white rounded-lg hover:bg-gray-800 disabled:opacity-50 transition-colors cursor-pointer"
                     >
                       {processingRegions ? `Enviando (${pendingRegions.length + 1} en cola)...` : pendingRegions.length > 0 ? `Agregar a cola (${pendingRegions.length + 1})` : "Agregar región"}
                     </button>
@@ -2349,7 +2361,7 @@ export default function ProductosPage() {
                 </button>
                 <button
                   onClick={closeRegiones}
-                  className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                  className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -2378,7 +2390,7 @@ export default function ProductosPage() {
                 <button
                   onClick={handleBulkSetEstado}
                   disabled={!bulkEstado || bulkLoading}
-                  className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 transition-colors inline-flex items-center gap-1.5"
+                  className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 transition-colors inline-flex items-center gap-1.5 cursor-pointer"
                 >
                   {bulkLoading ? (
                     <><svg className="animate-spin w-3.5 h-3.5" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg> Aplicando...</>
@@ -2402,7 +2414,7 @@ export default function ProductosPage() {
                 <button
                   onClick={handleBulkSetCategoria}
                   disabled={!bulkCategoria || bulkLoading}
-                  className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 transition-colors inline-flex items-center gap-1.5"
+                  className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 transition-colors inline-flex items-center gap-1.5 cursor-pointer"
                 >
                   {bulkLoading ? (
                     <><svg className="animate-spin w-3.5 h-3.5" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg> Asignando...</>
@@ -2552,7 +2564,7 @@ export default function ProductosPage() {
                             setProductosCache({});
                             productosCacheRef.current = {};
                           }}
-                          className="px-2 py-1.5 text-xs border border-gray-200 rounded-lg text-gray-500 hover:bg-gray-50"
+                          className="px-2 py-1.5 text-xs border border-gray-200 rounded-lg text-gray-500 hover:bg-gray-50 cursor-pointer"
                           title={sortDir === "asc" ? "Ascendente" : "Descendente"}
                         >
                           {sortDir === "asc" ? "↑ Asc" : "↓ Desc"}
@@ -2595,17 +2607,17 @@ export default function ProductosPage() {
                             />
                           </th>
                           <th className="text-left py-2.5 px-3 font-medium text-gray-500 w-[80px]">
-                            <button onClick={() => handleSort("codigo")} className="inline-flex items-center hover:text-gray-700 transition-colors">
+                            <button onClick={() => handleSort("codigo")} className="inline-flex items-center hover:text-gray-700 transition-colors cursor-pointer">
                               Código{renderSortArrow("codigo")}
                             </button>
                           </th>
                           <th className="text-left py-2.5 px-3 font-medium text-gray-500 min-w-[200px]">
-                            <button onClick={() => handleSort("nombre")} className="inline-flex items-center hover:text-gray-700 transition-colors">
+                            <button onClick={() => handleSort("nombre")} className="inline-flex items-center hover:text-gray-700 transition-colors cursor-pointer">
                               Nombre{renderSortArrow("nombre")}
                             </button>
                           </th>
                           <th className="text-left py-2.5 px-3 font-medium text-gray-500 w-[50px] lg:w-[155px]">
-                            <button onClick={() => handleSort("estado")} className="inline-flex items-center hover:text-gray-700 transition-colors">
+                            <button onClick={() => handleSort("estado")} className="inline-flex items-center hover:text-gray-700 transition-colors cursor-pointer">
                               <span className="hidden lg:inline">Estado</span>{renderSortArrow("estado")}
                             </button>
                           </th>
@@ -2776,7 +2788,7 @@ export default function ProductosPage() {
                                       {canUpdate && (
                                       <button
                                         onClick={() => { setMenuOpenId(null); openEdit(p); }}
-                                        className="w-full text-left px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-50 flex items-center gap-2"
+                                        className="w-full text-left px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-50 flex items-center gap-2 cursor-pointer"
                                       >
                                         <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -2786,7 +2798,7 @@ export default function ProductosPage() {
                                       )}
                                       <button
                                         onClick={() => { setMenuOpenId(null); openDetail(p.id, "productos"); }}
-                                        className="w-full text-left px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-50 flex items-center gap-2"
+                                        className="w-full text-left px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-50 flex items-center gap-2 cursor-pointer"
                                       >
                                         <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
@@ -2871,14 +2883,14 @@ export default function ProductosPage() {
                       <button
                         onClick={() => setPage((p) => Math.max(1, p - 1))}
                         disabled={page === 1 || bulkLoading || savingProductId !== null}
-                        className="px-3 py-1.5 text-xs border border-gray-200 rounded hover:bg-gray-50 disabled:opacity-40 transition-colors"
+                        className="px-3 py-1.5 text-xs border border-gray-200 rounded hover:bg-gray-50 disabled:opacity-40 transition-colors cursor-pointer"
                       >
                         Anterior
                       </button>
                       <button
                         onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                         disabled={page === totalPages || bulkLoading || savingProductId !== null}
-                        className="px-3 py-1.5 text-xs border border-gray-200 rounded hover:bg-gray-50 disabled:opacity-40 transition-colors"
+                        className="px-3 py-1.5 text-xs border border-gray-200 rounded hover:bg-gray-50 disabled:opacity-40 transition-colors cursor-pointer"
                       >
                         Siguiente
                       </button>
