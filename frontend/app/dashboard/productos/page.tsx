@@ -1265,7 +1265,7 @@ export default function ProductosPage() {
                     setGlobalRegionListCache({});
                     globalRegionCacheRef.current = {};
                   }}
-                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 cursor-pointer"
                 >
                   <option value="">Todas las regiones</option>
                   {regiones.map((r) => (
@@ -1329,7 +1329,7 @@ export default function ProductosPage() {
                       setGlobalRegionListCache({});
                       globalRegionCacheRef.current = {};
                     }}
-                    className="flex-1 px-2 py-1.5 text-xs border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                    className="flex-1 px-2 py-1.5 text-xs border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 cursor-pointer"
                   >
                     <option value="producto">Producto</option>
                     <option value="codigo">Código</option>
@@ -2449,7 +2449,7 @@ export default function ProductosPage() {
               <div className="relative">
                 <button
                   onClick={() => setShowFilters((v) => !v)}
-                  className={`px-3 py-2 text-sm border rounded-lg transition-colors inline-flex items-center gap-1.5 ${
+                  className={`px-3 py-2 text-sm border rounded-lg transition-colors inline-flex items-center gap-1.5 cursor-pointer ${
                     showFilters || activeFilterCount > 0
                       ? "bg-blue-50 border-blue-200 text-blue-700"
                       : "border-gray-200 text-gray-500 hover:bg-gray-50"
@@ -2475,7 +2475,7 @@ export default function ProductosPage() {
                             setFilterEstados(new Set());
                             setFilterCategoria("");
                           }}
-                          className="text-xs text-blue-600 hover:text-blue-800"
+                          className="text-xs text-blue-600 hover:text-blue-800 cursor-pointer"
                         >
                           Limpiar todo
                         </button>
@@ -2523,7 +2523,7 @@ export default function ProductosPage() {
                           setProductosCache({});
                           productosCacheRef.current = {};
                         }}
-                        className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                        className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 cursor-pointer"
                       >
                         <option value="">Todas las categorías</option>
                         {categorias.map((c) => (
@@ -2548,7 +2548,7 @@ export default function ProductosPage() {
                             setProductosCache({});
                             productosCacheRef.current = {};
                           }}
-                          className="flex-1 px-2 py-1.5 text-xs border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                          className="flex-1 px-2 py-1.5 text-xs border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 cursor-pointer"
                         >
                           <option value="fecha_creacion">Fecha creación</option>
                           <option value="fecha_actualizacion">Fecha actualización</option>
@@ -2743,7 +2743,7 @@ export default function ProductosPage() {
                                     <button
                                       onClick={() => openEdit(p)}
                                       disabled={!canUpdate}
-                                      className="p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                                      className="p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded transition-colors disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
                                       title="Editar"
                                     >
                                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
