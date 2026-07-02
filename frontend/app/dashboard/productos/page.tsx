@@ -1772,7 +1772,7 @@ export default function ProductosPage() {
                 <input
                   value={form.codigo}
                   onChange={(e) => setForm((f) => ({ ...f, codigo: e.target.value }))}
-                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 cursor-pointer"
                   required
                 />
               </div>
@@ -1781,7 +1781,7 @@ export default function ProductosPage() {
                 <input
                   value={form.nombre}
                   onChange={(e) => setForm((f) => ({ ...f, nombre: e.target.value }))}
-                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 cursor-pointer"
                   required
                 />
               </div>
@@ -1790,7 +1790,7 @@ export default function ProductosPage() {
                 <input
                   value={form.imagenUrl}
                   onChange={(e) => setForm((f) => ({ ...f, imagenUrl: e.target.value }))}
-                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 cursor-pointer"
                   placeholder="https://..."
                 />
               </div>
@@ -1799,7 +1799,7 @@ export default function ProductosPage() {
                 <select
                   value={form.categoria_id}
                   onChange={(e) => setForm((f) => ({ ...f, categoria_id: e.target.value }))}
-                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 cursor-pointer"
                 >
                   <option value="">Sin categoría</option>
                   {categorias.map((c) => (
@@ -1814,7 +1814,7 @@ export default function ProductosPage() {
                 <select
                   value={form.estado}
                   onChange={(e) => setForm((f) => ({ ...f, estado: e.target.value as EstadoRegion }))}
-                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 cursor-pointer"
                 >
                   {ESTADOS.map((e) => (
                     <option key={e} value={e}>
@@ -2277,7 +2277,7 @@ export default function ProductosPage() {
                       <select
                         value={regionForm.region_id}
                         onChange={(e) => setRegionForm((f) => ({ ...f, region_id: e.target.value }))}
-                        className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                        className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 cursor-pointer"
                         required
                       >
                         <option value="">Seleccionar región...</option>
@@ -2294,7 +2294,7 @@ export default function ProductosPage() {
                         <input
                           value={regionForm.codigo}
                           onChange={(e) => setRegionForm((f) => ({ ...f, codigo: e.target.value }))}
-                          className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                          className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 cursor-pointer"
                           required
                         />
                       </div>
@@ -2315,7 +2315,7 @@ export default function ProductosPage() {
                       <select
                         value={regionForm.estado}
                         onChange={(e) => setRegionForm((f) => ({ ...f, estado: e.target.value as EstadoRegion }))}
-                        className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                        className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 cursor-pointer"
                       >
                         {ESTADOS.map((e) => (
                           <option key={e} value={e}>
