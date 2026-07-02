@@ -67,6 +67,8 @@ export class ProductController {
     @Query('region_id') region_id?: string,
     @Query('precio_min') precio_min?: string,
     @Query('precio_max') precio_max?: string,
+    @Query('solo_ofertas') solo_ofertas?: string,
+    @Query('categoria_id') categoria_id?: string,
   ) {
     return this.productService.obtenerTodasLasRegiones(
       pagina ? +pagina : undefined,
@@ -78,6 +80,8 @@ export class ProductController {
       region_id ? +region_id : undefined,
       precio_min ? +precio_min : undefined,
       precio_max ? +precio_max : undefined,
+      solo_ofertas === 'true',
+      categoria_id ? +categoria_id : undefined,
     );
   }
 

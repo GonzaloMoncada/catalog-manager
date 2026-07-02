@@ -7,6 +7,7 @@ import {
   Res,
   Body,
   Delete,
+  Patch,
 } from '@nestjs/common';
 import type { Response } from 'express';
 import { Cache } from '@nestjs/cache-manager';
@@ -18,6 +19,7 @@ import { SkipAudit } from 'src/registro-actividades/audit.decorator';
 import { Verify2faDto } from './dto/verify-2fa.dto';
 import { Enable2faDto } from './dto/enable-2fa.dto';
 import { UsersService } from 'src/users/users.service';
+import { UpdateProfileDto } from 'src/users/dto/update-profile.dto';
 
 @SkipAudit()
 @UseGuards(JwtAuthGuard)
@@ -71,28 +73,43 @@ export class AuthController {
   @Get('profile')
   async getProfile(@Request() req) {
     const { userId, correo } = req.user as { userId: number; correo: string };
-    const cacheKey = `user:${userId}:permisos`;
-    let cached = await this.cache.get<{ isAdmin: boolean; permisos: string[] }>(
-      cacheKey,
-    );
-    if (!cached) {
-      const roles = await this.usersService.obtenerRolesDeUsuario(userId);
-      const isAdmin = roles.some(
-        (r) => r.tipo_rol.nombre.toLowerCase() === 'administrador',
-      );
-      const permisos = roles.flatMap((r) =>
-        r.tipo_rol.roles_permisos.map((rp) => rp.permiso.nombre),
-      );
-      cached = { isAdmin, permisos };
-      await this.cache.set(cacheKey, cached, 300_000);
-    }
+    const [cacheKey, perfilBasico] = await Promise.all([
+      (async () => {
+        const key = `user:${userId}:permisos`;
+        let cached = await this.cache.get<{
+          isAdmin: boolean;
+          permisos: string[];
+        }>(key);
+        if (!cached) {
+          const roles = await this.usersService.obtenerRolesDeUsuario(userId);
+          const isAdmin = roles.some(
+            (r) => r.tipo_rol.nombre.toLowerCase() === 'administrador',
+          );
+          const permisos = roles.flatMap((r) =>
+            r.tipo_rol.roles_permisos.map((rp) => rp.permiso.nombre),
+          );
+          cached = { isAdmin, permisos };
+          await this.cache.set(key, cached, 300_000);
+        }
+        return cached;
+      })(),
+      this.usersService.obtenerPerfilBasico(userId),
+    ]);
     return {
       userId,
       correo,
-      isAdmin: cached.isAdmin,
-      permisos: cached.permisos,
+      nombre_usuario: perfilBasico.nombre_usuario,
+      image_url: perfilBasico.image_url,
+      isAdmin: cacheKey.isAdmin,
+      permisos: cacheKey.permisos,
     };
   }
+
+  @Patch('profile')
+  actualizarPerfil(@Request() req, @Body() dto: UpdateProfileDto) {
+    return this.usersService.actualizarPerfil(req.user.userId, dto);
+  }
+
   @Post('auth/logout')
   async logout(@Request() req, @Res({ passthrough: true }) res: Response) {
     const token = req.cookies?.access_token;

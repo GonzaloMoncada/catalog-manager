@@ -24,7 +24,7 @@ export class TwoFactorService {
     return this.totp.generateSecret();
   }
 
-  generateQrCodeUrl(email: string, secret: string, appName = 'TuApp'): string {
+  generateQrCodeUrl(email: string, secret: string, appName = 'ComercialBrich'): string {
     return this.totp.toURI({ label: email, secret, issuer: appName });
   }
 }

@@ -59,6 +59,8 @@ export class ProductService {
     region_id?: number,
     precio_min?: number,
     precio_max?: number,
+    solo_ofertas?: boolean,
+    categoria_id?: number,
   ) {
     return this.productDbService.obtenerTodasLasRegiones(
       pagina,
@@ -70,6 +72,8 @@ export class ProductService {
       region_id,
       precio_min,
       precio_max,
+      solo_ofertas,
+      categoria_id,
     );
   }
 

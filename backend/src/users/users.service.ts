@@ -4,6 +4,7 @@ import { UsersDbService } from './users-db/users-db.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { CambiarContrasenaDto } from './dto/cambiar-contrasena.dto';
+import { UpdateProfileDto } from './dto/update-profile.dto';
 
 @Injectable()
 export class UsersService {
@@ -86,11 +87,19 @@ export class UsersService {
     return result;
   }
 
+  obtenerPerfilBasico(usuarioId: number) {
+    return this.usersDbService.obtenerPerfilBasico(usuarioId);
+  }
+
   cambiarContrasenaPropia(usuarioId: number, dto: CambiarContrasenaDto) {
     return this.usersDbService.cambiarContrasena(
       usuarioId,
       dto.contrasena_actual,
       dto.contrasena_nueva,
     );
+  }
+
+  actualizarPerfil(usuarioId: number, data: UpdateProfileDto) {
+    return this.usersDbService.actualizarPerfil(usuarioId, data);
   }
 }

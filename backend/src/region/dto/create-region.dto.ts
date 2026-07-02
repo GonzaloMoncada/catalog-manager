@@ -7,6 +7,10 @@ export class CreateRegionDto {
   nombre!: string;
 
   @IsOptional()
+  @IsString()
+  numero_romano?: string;
+
+  @IsOptional()
   @IsEnum(estado_region)
   estado?: keyof typeof estado_region;
 }

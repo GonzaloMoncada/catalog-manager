@@ -10,6 +10,9 @@ const RELACIONES_PRODUCTO = {
   producto_regiones: {
     include: {
       region: true,
+      oferta_producto: {
+        include: { oferta: true },
+      },
     },
   },
 } as const;
@@ -241,6 +244,8 @@ export class ProductDbService {
     region_id?: number,
     precio_min?: number,
     precio_max?: number,
+    solo_ofertas?: boolean,
+    categoria_id?: number,
   ) {
     const saltar = (pagina - 1) * limite;
 
@@ -283,11 +288,24 @@ export class ProductDbService {
       };
     }
 
+    if (solo_ofertas) {
+      where.oferta_producto = {
+        some: { oferta: { estado: 'ACTIVA' } },
+      };
+    }
+
+    if (categoria_id !== undefined) {
+      where.producto = { categoria_id };
+    }
+
     const include = {
       producto: {
         include: { Categorias: true },
       },
       region: true,
+      oferta_producto: {
+        include: { oferta: true },
+      },
     } as const;
 
     if (orderBy === 'estado') {
@@ -344,6 +362,18 @@ export class ProductDbService {
         paramIdx++;
         whereClauses.push(`producto_region.precio <= $${paramIdx}`);
         params.push(precio_max);
+      }
+
+      if (solo_ofertas) {
+        whereClauses.push(
+          `EXISTS (SELECT 1 FROM oferta_producto op JOIN oferta o ON o.id = op.oferta_id WHERE op.region_id = producto_region.codigo AND o.estado = 'ACTIVA')`,
+        );
+      }
+
+      if (categoria_id !== undefined) {
+        paramIdx++;
+        whereClauses.push(`p.categoria_id = $${paramIdx}`);
+        params.push(categoria_id);
       }
 
       const sqlWhere =
@@ -506,7 +536,12 @@ export class ProductDbService {
       const codigoList = codigos.map((c) => c.codigo);
       const datos = await this.prisma.producto_region.findMany({
         where: { codigo: { in: codigoList } },
-        include: { region: true },
+        include: {
+          region: true,
+          oferta_producto: {
+            include: { oferta: true },
+          },
+        },
       });
 
       const codigoMap = new Map(codigos.map((c, idx) => [c.codigo, idx]));
@@ -537,7 +572,12 @@ export class ProductDbService {
         skip: saltar,
         take: limite,
         orderBy: orderByClause,
-        include: { region: true },
+        include: {
+          region: true,
+          oferta_producto: {
+            include: { oferta: true },
+          },
+        },
       }),
       this.prisma.producto_region.count({ where }),
     ]);

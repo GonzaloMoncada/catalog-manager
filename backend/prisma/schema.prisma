@@ -47,6 +47,7 @@ enum estado_region {
 model region {
   id                Int               @id @default(autoincrement())
   nombre            String
+  numero_romano     String?
   estado            estado_region     @default(PENDIENTE)
   producto_regiones producto_region[]
 }

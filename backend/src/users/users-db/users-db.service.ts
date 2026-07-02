@@ -7,6 +7,7 @@ import {
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateUserDto } from '../dto/create-user.dto';
 import { UpdateUserDto } from '../dto/update-user.dto';
+import { UpdateProfileDto } from '../dto/update-profile.dto';
 import * as bcrypt from 'bcrypt';
 
 const RELACIONES_USUARIO = {
@@ -217,6 +218,19 @@ export class UsersDbService {
     });
   }
 
+  async obtenerPerfilBasico(usuarioId: number) {
+    const usuario = await this.prisma.usuarios.findUnique({
+      where: { id: usuarioId },
+      select: { nombre_usuario: true, image_url: true },
+    });
+
+    if (!usuario) {
+      throw new NotFoundException(`Usuario con id ${usuarioId} no encontrado`);
+    }
+
+    return usuario;
+  }
+
   async cambiarContrasena(
     usuarioId: number,
     contrasenaActual: string,
@@ -241,6 +255,28 @@ export class UsersDbService {
     await this.prisma.usuarios.update({
       where: { id: usuarioId },
       data: { contrasena: hash },
+    });
+  }
+
+  async actualizarPerfil(usuarioId: number, data: UpdateProfileDto) {
+    const usuario = await this.prisma.usuarios.findUnique({
+      where: { id: usuarioId },
+    });
+    if (!usuario) {
+      throw new NotFoundException(`Usuario con id ${usuarioId} no encontrado`);
+    }
+    if (data.nombre_usuario && data.nombre_usuario !== usuario.nombre_usuario) {
+      const existente = await this.prisma.usuarios.findUnique({
+        where: { nombre_usuario: data.nombre_usuario },
+      });
+      if (existente) {
+        throw new ConflictException('El nombre de usuario ya está en uso');
+      }
+    }
+    return this.prisma.usuarios.update({
+      where: { id: usuarioId },
+      data,
+      select: { nombre_usuario: true, image_url: true },
     });
   }
 }

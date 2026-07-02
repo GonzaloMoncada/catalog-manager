@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { apiGet, apiPost, apiPatch } from "@/lib/api";
 
 type EstadoRegion =
@@ -49,6 +49,20 @@ interface Region {
   nombre: string;
 }
 
+interface OfertaProducto {
+  id: number;
+  precio: number;
+  estado: string;
+  oferta: {
+    id: number;
+    nombre: string;
+    descripcion: string;
+    fecha_inicio: string;
+    fecha_fin: string;
+    estado: string;
+  };
+}
+
 interface ProductoRegion {
   producto_id: number;
   codigo: string;
@@ -56,6 +70,7 @@ interface ProductoRegion {
   region_id: number;
   estado: EstadoRegion;
   region: Region;
+  oferta_producto?: OfertaProducto[];
 }
 
 interface Producto {
@@ -74,6 +89,29 @@ interface Producto {
 interface Categoria {
   id: number;
   nombre: string;
+}
+
+function getBestOffer(pr: ProductoRegion): OfertaProducto | null {
+  const offers = pr.oferta_producto ?? [];
+  const active = offers.filter(
+    (o) => o.oferta.estado === "ACTIVA"
+  );
+  if (active.length === 0) return null;
+  return active.reduce((a, b) => (a.precio < b.precio ? a : b));
+}
+
+function hasActiveOffer(producto: Producto): boolean {
+  return (producto.producto_regiones ?? []).some(
+    (pr) => (pr.oferta_producto ?? []).some(
+      (o) => o.estado === "HABILITADO" && o.oferta.estado === "ACTIVA"
+    )
+  );
+}
+
+function formatDateRange(inicio: string, fin: string): string {
+  const i = new Date(inicio).toLocaleDateString("es-CL", { day: "2-digit", month: "2-digit" });
+  const f = new Date(fin).toLocaleDateString("es-CL", { day: "2-digit", month: "2-digit" });
+  return `${i} - ${f}`;
 }
 
 
@@ -137,6 +175,7 @@ export default function ProductosPage() {
   const [detailProductId, setDetailProductId] = useState<number | null>(null);
   const [detailData, setDetailData] = useState<Producto | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
+  const [detailContext, setDetailContext] = useState<"productos" | "regiones" | null>(null);
 
   const [regionForm, setRegionForm] = useState({
     region_id: "",
@@ -161,7 +200,7 @@ export default function ProductosPage() {
   useEffect(() => { detailProductIdRef.current = detailProductId; }, [detailProductId]);
 
   const [editingRegions, setEditingRegions] = useState<Set<string>>(new Set());
-  const [editRegionsData, setEditRegionsData] = useState<Record<string, { precio: string; estado: EstadoRegion }>>({});
+  const [editRegionsData, setEditRegionsData] = useState<Record<string, { codigo: string; precio: string; estado: EstadoRegion }>>({});
   const [editRegionsSaving, setEditRegionsSaving] = useState(false);
 
   const [regionList, setRegionList] = useState<ProductoRegion[]>([]);
@@ -182,7 +221,7 @@ export default function ProductosPage() {
   const [globalRegionListCache, setGlobalRegionListCache] = useState<Record<number, ProductoRegion[]>>({});
   const globalRegionCacheRef = useRef<Record<number, ProductoRegion[]>>({});
   const [globalRegionSearch, setGlobalRegionSearch] = useState("");
-  const [globalRegionSortBy, setGlobalRegionSortBy] = useState<"estado" | "codigo" | "precio" | "region" | "producto">("estado");
+  const [globalRegionSortBy, setGlobalRegionSortBy] = useState<"estado" | "codigo" | "precio" | "region" | "producto">("producto");
   const [globalRegionSortDir, setGlobalRegionSortDir] = useState<"asc" | "desc">("asc");
   const [globalRegionLoading, setGlobalRegionLoading] = useState(false);
   const [globalFilterEstados, setGlobalFilterEstados] = useState<Set<EstadoRegion>>(new Set());
@@ -192,6 +231,13 @@ export default function ProductosPage() {
   const [globalRegionPerPage, setGlobalRegionPerPage] = useState(20);
   const [globalCustomPerPage, setGlobalCustomPerPage] = useState("");
   const [showGlobalCustomInput, setShowGlobalCustomInput] = useState(false);
+  const [showGlobalFilters, setShowGlobalFilters] = useState(false);
+
+  const globalActiveFilterCount =
+    globalFilterEstados.size +
+    (globalFilterRegion ? 1 : 0) +
+    (globalFilterPrecioMin ? 1 : 0) +
+    (globalFilterPrecioMax ? 1 : 0);
 
   const [globalEditingRegions, setGlobalEditingRegions] = useState<Set<string>>(new Set());
   const [globalEditRegionsData, setGlobalEditRegionsData] = useState<Record<string, { precio: string; estado: EstadoRegion; productoId: number }>>({});
@@ -377,8 +423,11 @@ export default function ProductosPage() {
     setError("");
     const editId = modal.edit?.id ?? null;
     const originalProduct = modal.edit;
-    if (editId) setSavingProductId(editId);
-    closeModal();
+    const isEdit = !!editId;
+    if (isEdit) {
+      setSavingProductId(editId);
+      closeModal();
+    }
     setSaving(true);
     try {
       const body = {
@@ -414,10 +463,11 @@ export default function ProductosPage() {
         }
       } else {
         setToast({ message: "Creando producto...", type: "loading" });
-        await apiPost("product", body);
+        const created: Producto = await apiPost("product", body);
         setToast({ message: `Producto "${form.nombre || form.codigo}" creado`, type: "success" });
         setTimeout(() => setToast(null), 4000);
 
+        const newId = created.id;
         setPage(1);
         setCacheApiPage(0);
         setProductosCache({});
@@ -436,6 +486,11 @@ export default function ProductosPage() {
           const updated = trimCache({ 1: list }, 1);
           productosCacheRef.current = updated;
           setProductosCache(updated);
+        }
+
+        if (newId) {
+          openDetail(newId);
+          closeModal();
         }
       }
     } catch (e: any) {
@@ -474,6 +529,9 @@ export default function ProductosPage() {
       setProductos((prev) =>
         prev.map((p) => (p.id === id ? { ...p, estado: nuevoEstado } : p))
       );
+      if (detailOpen && detailProductId === id) {
+        setDetailData((prev) => prev ? { ...prev, estado: nuevoEstado } : prev);
+      }
     } catch (e: any) {
       alert(e.message || "Error al cambiar estado");
     } finally {
@@ -528,7 +586,8 @@ export default function ProductosPage() {
     }
   }
 
-  async function openDetail(productId: number) {
+  async function openDetail(productId: number, context: "productos" | "regiones" = "regiones") {
+    setDetailContext(context);
     setDetailProductId(productId);
     setDetailOpen(true);
     setDetailLoading(true);
@@ -809,6 +868,7 @@ export default function ProductosPage() {
     }
     setDetailOpen(false);
     setDetailProductId(null);
+    setDetailContext(null);
     setDetailData(null);
     setRegionForm({ region_id: "", codigo: "", precio: "", estado: "PENDIENTE" });
     setRegionError("");
@@ -819,6 +879,30 @@ export default function ProductosPage() {
     setRegionPage(1);
     setRegionSearch("");
     setFailedRegions([]);
+  }
+
+  const detailNavIds = useMemo(() => {
+    if (!detailContext) return [] as number[];
+    if (detailContext === "productos") {
+      return displayedProductos.map((p) => p.id);
+    }
+    const seen = new Set<number>();
+    return displayedGlobalRegions
+      .map((pr) => pr.producto_id)
+      .filter((id) => {
+        if (seen.has(id)) return false;
+        seen.add(id);
+        return true;
+      });
+  }, [detailContext, displayedProductos, displayedGlobalRegions]);
+
+  const currentNavIndex = detailProductId !== null ? detailNavIds.indexOf(detailProductId) : -1;
+
+  function navigateDetail(direction: "prev" | "next") {
+    if (currentNavIndex === -1 || !detailContext) return;
+    const newIndex = direction === "prev" ? currentNavIndex - 1 : currentNavIndex + 1;
+    if (newIndex < 0 || newIndex >= detailNavIds.length) return;
+    openDetail(detailNavIds[newIndex], detailContext);
   }
 
   async function processRegionQueue() {
@@ -878,6 +962,46 @@ export default function ProductosPage() {
     } catch {}
   }
 
+  function handleAutoGenerateRegions() {
+    if (!detailProductId || !detailData) return;
+    const precio = prompt("Ingrese el precio para las 3 regiones:");
+    if (!precio || isNaN(Number(precio)) || Number(precio) <= 0) {
+      setRegionError("Debe ingresar un precio válido");
+      return;
+    }
+    setRegionError("");
+    setFailedRegions([]);
+
+    const regionNames = ["Arica y Parinacota", "Tarapacá", "Antofagasta"];
+    const parentCode = detailData.codigo;
+
+    const parentCodeNum = Number(parentCode);
+    if (isNaN(parentCodeNum)) {
+      setRegionError("El código del producto no es numérico, no se puede auto-generar");
+      return;
+    }
+
+    const newRegions = regionNames.map((name, i) => {
+      const region = regiones.find((r) => r.nombre === name);
+      return {
+        region_id: region ? String(region.id) : "",
+        codigo: String(parentCodeNum + i + 1),
+        precio,
+        estado: "HABILITADO" as EstadoRegion,
+      };
+    });
+
+    const missing = newRegions.filter((r) => !r.region_id);
+    if (missing.length > 0) {
+      setRegionError(`Regiones no encontradas: ${missing.map((r) => r.codigo).join(", ")}. Asegúrate de que las regiones existen en el sistema.`);
+      return;
+    }
+
+    pendingRef.current = [...pendingRef.current, ...newRegions];
+    setPendingRegions(pendingRef.current);
+    processRegionQueue();
+  }
+
   function handleAddRegion(e: React.FormEvent) {
     e.preventDefault();
     if (!regionForm.region_id || !regionForm.codigo || !regionForm.precio) {
@@ -907,7 +1031,7 @@ export default function ProductosPage() {
     });
     setEditRegionsData((prev) => ({
       ...prev,
-      [pr.codigo]: prev[pr.codigo] ?? { precio: String(pr.precio), estado: pr.estado },
+      [pr.codigo]: prev[pr.codigo] ?? { codigo: pr.codigo, precio: String(pr.precio), estado: pr.estado },
     }));
   }
 
@@ -995,13 +1119,6 @@ export default function ProductosPage() {
         </div>
         <div className="flex items-center gap-2">
           <button
-            onClick={openCreate}
-            disabled={!canCreate}
-            className="px-4 py-2 bg-gray-900 text-white text-sm font-medium rounded-lg hover:bg-gray-800 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-          >
-            + Nuevo producto
-          </button>
-          <button
             onClick={openRegiones}
             className="px-3 py-2 text-sm border border-gray-200 rounded-lg text-gray-500 hover:bg-gray-50 transition-colors inline-flex items-center gap-1.5"
           >
@@ -1065,82 +1182,178 @@ export default function ProductosPage() {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
           </svg>
         </div>
-        <div className="flex items-center gap-2 flex-wrap">
-          {ESTADOS.map((e) => (
-            <label key={e} className="flex items-center gap-1 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={globalFilterEstados.has(e)}
-                onChange={() => {
-                  setGlobalFilterEstados((prev) => {
-                    const next = new Set(prev);
-                    if (next.has(e)) next.delete(e);
-                    else next.add(e);
-                    return next;
-                  });
-                  setGlobalRegionPage(1);
-                  setGlobalRegionCachePage(0);
-                  setGlobalRegionListCache({});
-                  globalRegionCacheRef.current = {};
-                }}
-                className="w-3.5 h-3.5 rounded border-gray-300 text-blue-600"
-              />
-              <span className={`text-xs font-medium rounded-full px-2 py-0.5 ${ESTADO_COLOR[e]}`}>
-                {ESTADO_LABEL[e]}
-              </span>
-            </label>
-          ))}
-        </div>
-        <div className="flex items-center gap-2 flex-wrap">
-          <select
-            value={globalFilterRegion}
-            onChange={(e) => {
-              setGlobalFilterRegion(e.target.value);
-              setGlobalRegionPage(1);
-              setGlobalRegionCachePage(0);
-              setGlobalRegionListCache({});
-              globalRegionCacheRef.current = {};
-            }}
-            className="text-xs border border-gray-200 rounded px-2 py-1.5 text-gray-500"
+        <div className="relative">
+          <button
+            onClick={() => setShowGlobalFilters((v) => !v)}
+            className={`px-3 py-2 text-sm border rounded-lg transition-colors inline-flex items-center gap-1.5 cursor-pointer ${
+              showGlobalFilters || globalActiveFilterCount > 0
+                ? "bg-blue-50 border-blue-200 text-blue-700"
+                : "border-gray-200 text-gray-500 hover:bg-gray-50"
+            }`}
           >
-            <option value="">Todas las regiones</option>
-            {regiones.map((r) => (
-              <option key={r.id} value={r.id}>{r.nombre}</option>
-            ))}
-          </select>
-          <div className="flex items-center gap-1 text-xs text-gray-400">
-            <span>$</span>
-            <input
-              type="text"
-              inputMode="numeric"
-              placeholder="Min"
-              value={globalFilterPrecioMin}
-              onChange={(e) => {
-                setGlobalFilterPrecioMin(e.target.value.replace(/\D/g, ""));
-                setGlobalRegionPage(1);
-                setGlobalRegionCachePage(0);
-                setGlobalRegionListCache({});
-                globalRegionCacheRef.current = {};
-              }}
-              className="w-16 text-xs border border-gray-200 rounded px-2 py-1 text-gray-500"
-            />
-            <span>—</span>
-            <input
-              type="text"
-              inputMode="numeric"
-              placeholder="Max"
-              value={globalFilterPrecioMax}
-              onChange={(e) => {
-                setGlobalFilterPrecioMax(e.target.value.replace(/\D/g, ""));
-                setGlobalRegionPage(1);
-                setGlobalRegionCachePage(0);
-                setGlobalRegionListCache({});
-                globalRegionCacheRef.current = {};
-              }}
-              className="w-16 text-xs border border-gray-200 rounded px-2 py-1 text-gray-500"
-            />
-            <span>$</span>
-          </div>
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+            </svg>
+            Filtros
+            {globalActiveFilterCount > 0 && (
+              <span className="inline-flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-blue-600 rounded-full">
+                {globalActiveFilterCount}
+              </span>
+            )}
+          </button>
+          {showGlobalFilters && (
+            <div className="absolute top-full right-0 mt-2 w-80 bg-white rounded-xl border border-gray-100 shadow-lg z-40 p-4">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-sm font-medium text-gray-700">Filtros</span>
+                {globalActiveFilterCount > 0 && (
+                  <button
+                    onClick={() => {
+                      setGlobalFilterEstados(new Set());
+                      setGlobalFilterRegion("");
+                      setGlobalFilterPrecioMin("");
+                      setGlobalFilterPrecioMax("");
+                      setGlobalRegionPage(1);
+                      setGlobalRegionCachePage(0);
+                      setGlobalRegionListCache({});
+                      globalRegionCacheRef.current = {};
+                    }}
+                    className="text-xs text-blue-600 hover:text-blue-800 cursor-pointer"
+                  >
+                    Limpiar todo
+                  </button>
+                )}
+              </div>
+
+              <div className="mb-3">
+                <label className="block text-xs font-medium text-gray-500 mb-2">Estado</label>
+                <div className="space-y-1.5 max-h-40 overflow-y-auto">
+                  {ESTADOS.map((e) => (
+                    <label key={e} className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={globalFilterEstados.has(e)}
+                        onChange={() => {
+                          setGlobalFilterEstados((prev) => {
+                            const next = new Set(prev);
+                            if (next.has(e)) next.delete(e);
+                            else next.add(e);
+                            return next;
+                          });
+                          setGlobalRegionPage(1);
+                          setGlobalRegionCachePage(0);
+                          setGlobalRegionListCache({});
+                          globalRegionCacheRef.current = {};
+                        }}
+                        className="w-3.5 h-3.5 rounded border-gray-300 text-blue-600"
+                      />
+                      <span className={`text-xs font-medium rounded-full px-2 py-0.5 ${ESTADO_COLOR[e]}`}>
+                        {ESTADO_LABEL[e]}
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              <div className="mb-3">
+                <label className="block text-xs font-medium text-gray-500 mb-2">Región</label>
+                <select
+                  value={globalFilterRegion}
+                  onChange={(e) => {
+                    setGlobalFilterRegion(e.target.value);
+                    setGlobalRegionPage(1);
+                    setGlobalRegionCachePage(0);
+                    setGlobalRegionListCache({});
+                    globalRegionCacheRef.current = {};
+                  }}
+                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                >
+                  <option value="">Todas las regiones</option>
+                  {regiones.map((r) => (
+                    <option key={r.id} value={r.id}>{r.nombre}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-gray-500 mb-2">Precio</label>
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1 flex-1">
+                    <span className="text-xs text-gray-400">$</span>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      placeholder="Min"
+                      value={globalFilterPrecioMin}
+                      onChange={(e) => {
+                        setGlobalFilterPrecioMin(e.target.value.replace(/\D/g, ""));
+                        setGlobalRegionPage(1);
+                        setGlobalRegionCachePage(0);
+                        setGlobalRegionListCache({});
+                        globalRegionCacheRef.current = {};
+                      }}
+                      className="w-full px-2 py-1.5 text-xs border border-gray-200 rounded focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                    />
+                  </div>
+                  <span className="text-xs text-gray-400">—</span>
+                  <div className="flex items-center gap-1 flex-1">
+                    <span className="text-xs text-gray-400">$</span>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      placeholder="Max"
+                      value={globalFilterPrecioMax}
+                      onChange={(e) => {
+                        setGlobalFilterPrecioMax(e.target.value.replace(/\D/g, ""));
+                        setGlobalRegionPage(1);
+                        setGlobalRegionCachePage(0);
+                        setGlobalRegionListCache({});
+                        globalRegionCacheRef.current = {};
+                      }}
+                      className="w-full px-2 py-1.5 text-xs border border-gray-200 rounded focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-3 pt-3 border-t border-gray-100">
+                <label className="block text-xs font-medium text-gray-500 mb-2">Ordenar por</label>
+                <div className="flex items-center gap-1.5">
+                  <select
+                    value={globalRegionSortBy}
+                    onChange={(e) => {
+                      const v = e.target.value as "estado" | "codigo" | "precio" | "region" | "producto";
+                      setGlobalRegionSortBy(v);
+                      setGlobalRegionSortDir("asc");
+                      setGlobalRegionPage(1);
+                      setGlobalRegionCachePage(0);
+                      setGlobalRegionListCache({});
+                      globalRegionCacheRef.current = {};
+                    }}
+                    className="flex-1 px-2 py-1.5 text-xs border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                  >
+                    <option value="producto">Producto</option>
+                    <option value="codigo">Código</option>
+                    <option value="region">Región</option>
+                    <option value="precio">Precio</option>
+                    <option value="estado">Estado</option>
+                  </select>
+                  <button
+                    onClick={() => {
+                      setGlobalRegionSortDir((d) => (d === "asc" ? "desc" : "asc"));
+                      setGlobalRegionPage(1);
+                      setGlobalRegionCachePage(0);
+                      setGlobalRegionListCache({});
+                      globalRegionCacheRef.current = {};
+                    }}
+                    className="px-2 py-1.5 text-xs border border-gray-200 rounded-lg text-gray-500 hover:bg-gray-50 cursor-pointer"
+                    title={globalRegionSortDir === "asc" ? "Ascendente" : "Descendente"}
+                  >
+                    {globalRegionSortDir === "asc" ? "↑ Asc" : "↓ Desc"}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -1263,6 +1476,7 @@ export default function ProductosPage() {
                   </button>
                 </th>
                 <th className="w-[60px] py-2.5 px-3" />
+                <th className="w-[36px] py-2.5 px-0" />
               </tr>
             </thead>
             <tbody>
@@ -1276,9 +1490,11 @@ export default function ProductosPage() {
                 const isBulkSelected = globalSelectedRegions.has(pr.codigo);
                 if (lastPid !== null && pr.producto_id !== lastPid) groupIdx++;
                 const isNewGroup = lastPid === null || pr.producto_id !== lastPid;
+                const hasNextSameProduct = isNewGroup && idx + 1 < arr.length && arr[idx + 1].producto_id === pr.producto_id;
+                const showGroupMarker = hasNextSameProduct && (globalRegionSortBy === "producto" || globalRegionSortBy === "codigo");
                 lastPid = pr.producto_id;
                 const groupBg = (!globalBulkLoading && !globalEditRegionsSaving && !isBulkSelected)
-                  ? (groupIdx % 2 === 0 ? "" : "bg-gray-50/50")
+                  ? ((globalRegionSortBy === "producto" || globalRegionSortBy === "codigo") && groupIdx % 2 === 0 ? "" : (globalRegionSortBy === "producto" || globalRegionSortBy === "codigo") ? "bg-gray-50/50" : "")
                   : "";
                 return (
                   <tr key={pr.codigo} className={
@@ -1287,7 +1503,7 @@ export default function ProductosPage() {
                      globalEditRegionsSaving && isEditing ? "bg-blue-100 animate-pulse" : "")
                   }>
                     <td className="py-2.5 px-3 text-center relative">
-                      {isNewGroup && (
+                      {showGroupMarker && (
                         <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-6 bg-blue-400/60 rounded-r" />
                       )}
                       <input
@@ -1306,7 +1522,7 @@ export default function ProductosPage() {
                       />
                     </td>
                     <td className="py-2 px-3">
-                      <span className={"truncate block" + (isNewGroup ? " font-semibold" : " text-gray-400")} title={productoPadre?.nombre ?? ""}>{productoPadre?.nombre ?? "—"}</span>
+                      <span className={"truncate block" + (showGroupMarker ? " font-semibold" : (globalRegionSortBy === "producto" || globalRegionSortBy === "codigo") && !isNewGroup ? " text-gray-400" : "")} title={productoPadre?.nombre ?? ""}>{productoPadre?.nombre ?? "—"}</span>
                       <span className="text-gray-400 text-xs">{productoPadre?.codigo ?? ""}</span>
                     </td>
                     <td className="py-2 px-3 font-mono text-gray-500 text-xs truncate">{pr.codigo}</td>
@@ -1331,14 +1547,13 @@ export default function ProductosPage() {
                               [pr.codigo]: { ...prev[pr.codigo], precio: e.target.value, estado: prev[pr.codigo]?.estado ?? pr.estado, productoId: prev[pr.codigo]?.productoId ?? productoPadre?.id ?? 0 },
                             }))
                           }
-                          className="w-24 px-2 py-1 text-xs text-right border border-gray-200 rounded focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                          className="w-24 px-2 py-1 text-xs text-right border border-gray-200 rounded focus:outline-none focus:ring-2 focus:ring-blue-500/20 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                         />
                       ) : (
-                        <span className="text-gray-900">${pr.precio.toFixed(2)}</span>
-                      )}
-                    </td>
-                    <td className="py-2 px-3 text-right text-gray-400 text-xs">—</td>
-                    <td className="py-2 px-3">
+                                      <span className="text-gray-900">${pr.precio.toFixed(2)}</span>
+                                    )}
+                                  </td>
+                                  <td className="py-2 px-3">
                       {isEditing && globalEditRegionsSaving ? (
                         <span className="inline-flex items-center gap-1.5 text-xs font-medium rounded-full px-2.5 py-0.5 bg-gray-100 text-gray-400">
                           <svg className="animate-spin w-3 h-3" fill="none" viewBox="0 0 24 24">
@@ -1419,6 +1634,17 @@ export default function ProductosPage() {
                         {isEditing ? "Descartar" : "Editar"}
                       </button>
                       )}
+                    </td>
+                    <td className="py-2 px-0">
+                      <button
+                        onClick={() => openDetail(pr.producto_id, "regiones")}
+                        className="p-1 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors cursor-pointer"
+                        title="Ver detalle del producto"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                        </svg>
+                      </button>
                     </td>
                   </tr>
                 );
@@ -1518,7 +1744,7 @@ export default function ProductosPage() {
       )}
 
       {modal.open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/30">
           <div className="bg-white rounded-2xl shadow-lg w-full max-w-md p-6 mx-4 max-h-[90vh] overflow-y-auto">
             <h2 className="text-base font-bold text-gray-900 mb-4">
               {modal.edit ? "Editar producto" : "Nuevo producto"}
@@ -1607,14 +1833,41 @@ export default function ProductosPage() {
       )}
 
       {detailOpen && (
-        <div className="fixed inset-0 z-50 flex items-start justify-end">
+        <div className="fixed inset-0 z-[60] flex items-start justify-end">
           <div className="absolute inset-0 bg-black/30" onClick={closeDetail} />
           <div className="relative bg-white w-full max-w-xl h-full overflow-y-auto shadow-2xl p-6">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-base font-bold text-gray-900">
+              <h2 className="text-base font-bold text-gray-900 truncate max-w-[280px]" title={detailData?.nombre}>
                 {detailData ? detailData.nombre : "Detalle del producto"}
               </h2>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 shrink-0">
+                {detailContext && detailNavIds.length > 1 && (
+                  <div className="flex items-center gap-0.5">
+                    <button
+                      onClick={() => navigateDetail("prev")}
+                      disabled={currentNavIndex <= 0}
+                      className="p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded transition-colors disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+                      title="Producto anterior"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                      </svg>
+                    </button>
+                    <span className="text-xs text-gray-400 tabular-nums min-w-[2rem] text-center">
+                      {currentNavIndex + 1}/{detailNavIds.length}
+                    </span>
+                    <button
+                      onClick={() => navigateDetail("next")}
+                      disabled={currentNavIndex >= detailNavIds.length - 1}
+                      className="p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded transition-colors disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+                      title="Producto siguiente"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </svg>
+                    </button>
+                  </div>
+                )}
                 {(processingRegions || editRegionsSaving) && (
                   <span className="text-xs text-blue-600 font-medium flex items-center gap-1">
                     <svg className="animate-spin w-3.5 h-3.5" fill="none" viewBox="0 0 24 24">
@@ -1627,7 +1880,7 @@ export default function ProductosPage() {
                 <button
                   onClick={closeDetail}
                   disabled={processingRegions || editRegionsSaving}
-                  className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                  className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -1650,11 +1903,25 @@ export default function ProductosPage() {
                     </div>
                     <div>
                       <span className="text-gray-400">Estado</span>
-                      <p>
-                        <span className={`text-xs font-medium rounded-full px-2.5 py-0.5 ${ESTADO_COLOR[detailData.estado]}`}>
-                          {ESTADO_LABEL[detailData.estado]}
-                        </span>
-                      </p>
+                      {canUpdate ? (
+                        <select
+                          value={detailData.estado}
+                          disabled={changingStatus.has(detailData.id)}
+                          onChange={(e) => handleChangeStatus(detailData.id, e.target.value as EstadoRegion)}
+                          className={`text-xs font-medium rounded-full px-2.5 py-0.5 border-0 cursor-pointer ${ESTADO_COLOR[detailData.estado]}`}
+                          style={{ appearance: "auto" }}
+                        >
+                          {ESTADOS.map((e) => (
+                            <option key={e} value={e}>{ESTADO_LABEL[e]}</option>
+                          ))}
+                        </select>
+                      ) : (
+                        <p>
+                          <span className={`text-xs font-medium rounded-full px-2.5 py-0.5 ${ESTADO_COLOR[detailData.estado]}`}>
+                            {ESTADO_LABEL[detailData.estado]}
+                          </span>
+                        </p>
+                      )}
                     </div>
                     <div>
                       <span className="text-gray-400">Categoría</span>
@@ -1663,6 +1930,26 @@ export default function ProductosPage() {
                     <div>
                       <span className="text-gray-400">Imagen</span>
                       <p className="text-gray-900 truncate">{detailData.imagenUrl ?? "—"}</p>
+                    </div>
+                    <div>
+                      <span className="text-gray-400">Oferta</span>
+                      {(() => {
+                        const allOffers = (detailData.producto_regiones ?? [])
+                          .flatMap((pr) => (pr.oferta_producto ?? [])
+                            .filter((o) => o.estado === "HABILITADO" && o.oferta.estado === "ACTIVA")
+                            .map((o) => ({ ...o, regionCodigo: pr.codigo }))
+                          );
+                        if (allOffers.length === 0) return <p className="text-gray-900">—</p>;
+                        const best = allOffers.reduce((a, b) => (a.precio < b.precio ? a : b));
+                        return (
+                          <div>
+                            <p className="text-green-700 font-medium">${best.precio.toFixed(2)}</p>
+                            <p className="text-xs text-gray-400">
+                              {best.oferta.nombre} · {formatDateRange(best.oferta.fecha_inicio, best.oferta.fecha_fin)}
+                            </p>
+                          </div>
+                        );
+                      })()}
                     </div>
                     <div>
                       <span className="text-gray-400">Creado</span>
@@ -1777,7 +2064,29 @@ export default function ProductosPage() {
                                   (editRegionsSaving && isEditing ? "bg-blue-100 animate-pulse" : "")
                                 }>
                                   <td className="py-2 px-3 text-gray-900">{pr.region.nombre}</td>
-                                  <td className="py-2 px-3 font-mono text-gray-500 text-xs">{pr.codigo}</td>
+                                  <td className="py-2 px-3 font-mono text-gray-500 text-xs">
+                                    {isEditing && editRegionsSaving ? (
+                                      <span className="text-gray-400">{editData?.codigo ?? pr.codigo}</span>
+                                    ) : isEditing ? (
+                                      <input
+                                        type="text"
+                                        value={editData?.codigo ?? ""}
+                                        onChange={(e) =>
+                                          setEditRegionsData((prev) => ({
+                                            ...prev,
+                                            [pr.codigo]: {
+                                              codigo: e.target.value,
+                                              precio: prev[pr.codigo]?.precio ?? String(pr.precio),
+                                              estado: prev[pr.codigo]?.estado ?? pr.estado,
+                                            },
+                                          }))
+                                        }
+                                        className="w-24 px-1.5 py-0.5 text-xs border border-gray-200 rounded focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                                      />
+                                    ) : (
+                                      pr.codigo
+                                    )}
+                                  </td>
                                   <td className="py-2 px-3 text-right">
                                     {isEditing && editRegionsSaving ? (
                                       <span className="inline-flex items-center gap-1.5 text-xs text-gray-400">
@@ -1798,7 +2107,7 @@ export default function ProductosPage() {
                                             [pr.codigo]: { ...prev[pr.codigo], precio: e.target.value, estado: prev[pr.codigo]?.estado ?? pr.estado },
                                           }))
                                         }
-                                        className="w-24 px-2 py-1 text-xs text-right border border-gray-200 rounded focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                                        className="w-24 px-1.5 py-0.5 text-xs text-right border border-gray-200 rounded focus:outline-none focus:ring-2 focus:ring-blue-500/20 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                                       />
                                     ) : (
                                       <span className="text-gray-900">${pr.precio.toFixed(2)}</span>
@@ -1933,7 +2242,18 @@ export default function ProductosPage() {
 
                 {canUpdate && (
                 <div className="border-t border-gray-100 pt-4">
-                  <h3 className="text-sm font-bold text-gray-900 mb-3">Agregar región</h3>
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-sm font-bold text-gray-900">Agregar región</h3>
+                    <button
+                      type="button"
+                      onClick={handleAutoGenerateRegions}
+                      disabled={processingRegions}
+                      className="px-2.5 py-1 text-xs border border-blue-200 text-blue-600 rounded-lg hover:bg-blue-50 disabled:opacity-50 transition-colors cursor-pointer"
+                      title="Generar automáticamente Arica y Parinacota, Tarapacá y Antofagasta"
+                    >
+                      Generar 3 regiones
+                    </button>
+                  </div>
                   {regionError && (
                     <div className="mb-3 p-2.5 rounded-lg bg-red-50 border border-red-100 text-red-600 text-xs">
                       {regionError}
@@ -1973,7 +2293,7 @@ export default function ProductosPage() {
                           step="0.01"
                           value={regionForm.precio}
                           onChange={(e) => setRegionForm((f) => ({ ...f, precio: e.target.value }))}
-                          className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                          className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                           required
                         />
                       </div>
@@ -2023,7 +2343,7 @@ export default function ProductosPage() {
                 <button
                   onClick={openCreate}
                   disabled={!canCreate}
-                  className="px-4 py-2 bg-gray-900 text-white text-sm font-medium rounded-lg hover:bg-gray-800 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                  className="px-4 py-2 bg-gray-900 text-white text-sm font-medium rounded-lg hover:bg-gray-800 transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
                 >
                   + Nuevo
                 </button>
@@ -2291,6 +2611,7 @@ export default function ProductosPage() {
                           </th>
                           <th className="text-left py-2.5 px-3 font-medium text-gray-500 w-[80px]">Categoría</th>
                           <th className="text-left py-2.5 px-3 font-medium text-gray-500 w-[60px]">Regiones</th>
+                          <th className="text-center py-2.5 px-3 font-medium text-gray-500 w-[55px]">Oferta</th>
                           <th className="w-[80px] py-2.5 px-3" />
                         </tr>
                       </thead>
@@ -2391,6 +2712,13 @@ export default function ProductosPage() {
                             <td className="py-2 px-3 text-gray-500 text-xs">
                               {p.producto_regiones?.length ?? 0}
                             </td>
+                            <td className="py-2 px-3 text-center">
+                              {hasActiveOffer(p) ? (
+                                <span className="text-green-600 font-bold text-xs" title="Tiene oferta activa">Sí</span>
+                              ) : (
+                                <span className="text-gray-300 text-xs">—</span>
+                              )}
+                            </td>
                             <td className="py-2 px-3 relative">
                               <div className="hidden lg:flex items-center gap-0.5">
                                 {(bulkLoading && selected.has(p.id)) || savingProductId === p.id ? (
@@ -2411,7 +2739,7 @@ export default function ProductosPage() {
                                       </svg>
                                     </button>
                                     <button
-                                      onClick={() => openDetail(p.id)}
+                                      onClick={() => openDetail(p.id, "productos")}
                                       className="p-1 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
                                       title="Detalle"
                                     >
@@ -2457,7 +2785,7 @@ export default function ProductosPage() {
                                       </button>
                                       )}
                                       <button
-                                        onClick={() => { setMenuOpenId(null); openDetail(p.id); }}
+                                        onClick={() => { setMenuOpenId(null); openDetail(p.id, "productos"); }}
                                         className="w-full text-left px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-50 flex items-center gap-2"
                                       >
                                         <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

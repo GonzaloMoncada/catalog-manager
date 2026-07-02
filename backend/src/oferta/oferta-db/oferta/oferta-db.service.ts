@@ -212,7 +212,10 @@ export class OfertaDbService {
           productos.map((p) => p.region_id),
           id,
         );
-      } else if (datosOferta.estado === 'ACTIVA' && oferta.estado !== 'ACTIVA') {
+      } else if (
+        datosOferta.estado === 'ACTIVA' &&
+        oferta.estado !== 'ACTIVA'
+      ) {
         const existentes = await this.prisma.oferta_producto.findMany({
           where: { oferta_id: id },
           select: { region_id: true },

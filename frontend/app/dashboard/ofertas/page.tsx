@@ -406,7 +406,7 @@ export default function OfertasPage() {
 
   async function searchProductos(q?: string) {
     const query = q ?? productoSearch;
-    if (!query.trim() || query.trim().length < 3) {
+    if (!query.trim()) {
       setProductoSearchResults([]);
       return;
     }

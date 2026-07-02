@@ -6,10 +6,20 @@ import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import { apiGet } from "@/lib/api";
 
+interface Profile {
+  userId: string;
+  correo: string;
+  nombre_usuario: string;
+  image_url: string | null;
+  isAdmin: boolean;
+  permisos: string[];
+}
+
 const NAV_ITEMS = [
   { href: "/dashboard/productos", label: "Productos", permiso: "PRODUCTO_READ" },
   { href: "/dashboard/categorias", label: "Categorías", permiso: "CATEGORIA_READ" },
   { href: "/dashboard/ofertas", label: "Ofertas", permiso: "OFERTA_READ" },
+  { href: "/dashboard/importar", label: "Importar", permiso: "PRODUCTO_READ" },
   { href: "/dashboard/usuarios", label: "Usuarios", permiso: "USUARIO_READ" },
   { href: "/dashboard/roles", label: "Roles", permiso: "ROL_READ" },
 ];
@@ -19,11 +29,15 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [permisos, setPermisos] = useState<string[]>([]);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [userName, setUserName] = useState("");
+  const [userImg, setUserImg] = useState("");
 
   useEffect(() => {
-    apiGet("profile").then((data) => {
+    apiGet("profile").then((data: Profile) => {
       setPermisos(data.permisos ?? []);
       setIsAdmin(data.isAdmin ?? false);
+      setUserName(data.nombre_usuario);
+      setUserImg(data.image_url ?? "");
     }).catch(() => {});
   }, []);
 
@@ -36,7 +50,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   );
 
   return (
-    <div className="min-h-screen flex bg-gray-50">
+    <div className="min-h-screen bg-gray-50">
       {/* Mobile overlay */}
       {sidebarOpen && (
         <div
@@ -45,15 +59,15 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         />
       )}
 
-      {/* Sidebar */}
+      {/* Sidebar — fixed on all screen sizes */}
       <aside
         className={
           "fixed inset-y-0 left-0 z-50 w-56 bg-white border-r border-gray-100 flex flex-col transition-transform duration-200 " +
-          "lg:relative lg:translate-x-0 lg:z-auto " +
+          "lg:translate-x-0 " +
           (sidebarOpen ? "translate-x-0" : "-translate-x-full")
         }
       >
-        <div className="h-14 flex items-center justify-between px-5 border-b border-gray-100">
+        <div className="h-14 flex items-center justify-between px-5 border-b border-gray-100 shrink-0">
           <Link href="/" className="text-sm font-semibold text-gray-800 tracking-tight">
             Comercial Brich
           </Link>
@@ -66,7 +80,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
             </svg>
           </button>
         </div>
-        <nav className="flex-1 px-3 py-4 space-y-1">
+        <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
           {filteredNav.map((item) => {
             const active = pathname.startsWith(item.href);
             return (
@@ -86,12 +100,28 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
             );
           })}
         </nav>
-        <div className="px-3 py-4 border-t border-gray-100">
+
+        {/* Profile — pinned to bottom */}
+        <div className="border-t border-gray-100 shrink-0">
           <Link
-            href="/auth/logout"
-            className="block px-3 py-2 rounded-lg text-sm text-gray-500 hover:bg-gray-50 hover:text-gray-700 transition-colors"
+            href="/dashboard/profile"
+            onClick={closeSidebar}
+            className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors"
           >
-            Cerrar sesión
+            {userImg ? (
+              <img
+                src={userImg}
+                alt={userName}
+                className="w-8 h-8 rounded-full object-cover shrink-0"
+              />
+            ) : (
+              <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 text-xs font-medium shrink-0">
+                {userName ? userName.charAt(0).toUpperCase() : "?"}
+              </div>
+            )}
+            <span className="text-sm text-gray-700 truncate">
+              {userName || "?"}
+            </span>
           </Link>
         </div>
       </aside>
@@ -111,7 +141,8 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         </Link>
       </div>
 
-      <main className="flex-1 min-w-0 pt-14 lg:pt-0">{children}</main>
+      {/* Main content — offset for fixed sidebar on desktop */}
+      <main className="lg:ml-56 pt-14 lg:pt-0">{children}</main>
     </div>
   );
 }

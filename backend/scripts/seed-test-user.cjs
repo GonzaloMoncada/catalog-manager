@@ -13,7 +13,7 @@ for (const line of envFile.split('\n')) {
   if (match) process.env[match[1].trim()] = match[2].trim();
 }
 
-const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+const pool = new Pool({ connectionString: process.env.DATABASE_URL, ssl: process.env.DB_SSL === 'true' });
 
 const USUARIO = { nombre_usuario: 'testuser', correo: 'test@example.com', contrasena: 'Test1234!', estado: 'confirmado' };
 
