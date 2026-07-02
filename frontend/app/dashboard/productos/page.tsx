@@ -2752,7 +2752,7 @@ export default function ProductosPage() {
                                     </button>
                                     <button
                                       onClick={() => openDetail(p.id, "productos")}
-                                      className="p-1 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                                      className="p-1 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors cursor-pointer"
                                       title="Detalle"
                                     >
                                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
